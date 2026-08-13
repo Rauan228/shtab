@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
 import { addDays, getCalendar, todayIso } from '../lib/api';
 import { useUi } from '../lib/ui';
+import { BrandMark, Wordmark } from './BrandMark';
 import { Confirm, Drawer } from './Drawer';
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -70,11 +71,8 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="app">
       <aside className="sidebar">
         <div className="side-brand">
-          <div className="mark mark-sm">S</div>
-          <div>
-            <div className="t">Shtab</div>
-            <div className="s">Кабинет владельца</div>
-          </div>
+          <BrandMark size={32} />
+          <Wordmark />
         </div>
         <div className="nav">
           {nav('/today', '◧', 'Сегодня', isToday, pending)}
@@ -108,7 +106,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="main">
         <header className="topbar">
           <div className="top-l">
-            <div className="mark mark-xs m-only">S</div>
+            <span className="m-only">
+              <BrandMark size={24} />
+            </span>
             <div className="top-title">{title}</div>
             {pageMeta ? <div className="top-meta">{pageMeta}</div> : null}
           </div>

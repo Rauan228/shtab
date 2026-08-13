@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/auth';
+import { BrandMark } from './BrandMark';
 
 export function Login() {
   const { login } = useAuth();
@@ -37,22 +38,17 @@ export function Login() {
     <div className="login">
       <div className="login-l">
         <div className="brand-row">
-          <div className="mark">S</div>
-          <div style={{ fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em' }}>Shtab</div>
-          <div
-            className="mono"
-            style={{
-              fontSize: 11,
-              color: 'oklch(0.6 0.01 250)',
-              borderLeft: '1px solid oklch(0.9 0.006 250)',
-              paddingLeft: 10,
-            }}
-          >
-            AI-менеджер в WhatsApp
+          <BrandMark size={36} />
+          <div>
+            <div className="wordmark" style={{ fontSize: 18 }}>
+              <span className="wm-aman">Aman</span>
+              <span className="wm-ai">AI</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--fg-faint)', marginTop: 2 }}>AI-менеджер в WhatsApp</div>
           </div>
         </div>
         <h1>Кабинет владельца</h1>
-        <div className="login-sub">Занятость, брони и правила, по которым бот продаёт ваши объекты.</div>
+        <div className="login-sub">Занятость, брони и правила, по которым AmanAI продаёт ваши объекты.</div>
         <form className="login-form" onSubmit={submit}>
           <label className="field">
             <span>Пароль доступа</span>
@@ -83,10 +79,13 @@ export function Login() {
       </div>
       <div className="login-r">
         <div className="preview">
+          <div style={{ display: 'grid', placeItems: 'center', padding: '8px 0 4px' }}>
+            <BrandMark size={168} hero />
+          </div>
           <div className="prev-card">
-            <div className="kicker">Shtab</div>
-            <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Живой PMS</div>
-            <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 6, lineHeight: 1.5 }}>
+            <div className="kicker">AmanAI</div>
+            <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Сіздің ісіңіз аман</div>
+            <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
               Календарь, объекты и брони — те же данные, что видит бот в WhatsApp.
             </div>
           </div>

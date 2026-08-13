@@ -3,13 +3,13 @@
 import { ST, type Status } from '../lib/demo';
 
 const SWATCHES = [
-  { name: 'Primary', token: '--brand', c: 'oklch(0.52 0.09 200)' },
-  { name: 'Ink', token: '--fg', c: 'oklch(0.24 0.012 250)' },
-  { name: 'Muted', token: '--fg-muted', c: 'oklch(0.55 0.012 250)' },
-  { name: 'Canvas', token: '--bg', c: 'oklch(0.97 0.004 250)' },
-  { name: 'Border', token: '--border', c: 'oklch(0.91 0.006 250)' },
+  { name: 'Teal', token: '--brand', c: '#127f86' },
+  { name: 'Deep', token: '--brand-deep', c: '#0b4a58' },
+  { name: 'Glow', token: '--brand-glow', c: '#3dff8a' },
+  { name: 'Ink', token: '--fg', c: '#0c2a32' },
+  { name: 'Canvas', token: '--bg', c: '#f3f8f8' },
+  { name: 'Soft', token: '--brand-soft', c: '#e6f5f4' },
   { name: 'Pending', token: '--amber', c: 'oklch(0.75 0.14 75)' },
-  { name: 'In stay', token: '--green', c: 'oklch(0.62 0.13 155)' },
   { name: 'Danger', token: '--red', c: 'oklch(0.55 0.17 25)' },
 ];
 

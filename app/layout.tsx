@@ -3,8 +3,8 @@ import { Providers } from '../components/Providers';
 import './globals.css';
 
 export const metadata = {
-  title: 'Shtab · Кабинет владельца',
-  description: 'AI-менеджер в WhatsApp — календарь, объекты, брони',
+  title: 'AmanAI · Кабинет владельца',
+  description: 'AmanAI — AI-менеджер в WhatsApp. Календарь, объекты, брони.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

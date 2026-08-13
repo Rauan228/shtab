@@ -1,20 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --brand: oklch(0.52 0.09 200);
-  --brand-hover: oklch(0.46 0.09 200);
-  --fg: oklch(0.24 0.012 250);
-  --fg-2: oklch(0.42 0.012 250);
-  --fg-muted: oklch(0.55 0.012 250);
-  --fg-faint: oklch(0.62 0.01 250);
-  --bg: oklch(0.97 0.004 250);
+  /* AmanAI — teal A + neon neural node */
+  --brand: #127f86;
+  --brand-deep: #0b4a58;
+  --brand-mid: #1a9a96;
+  --brand-glow: #3dff8a;
+  --brand-hover: #0e6b72;
+  --brand-soft: #e6f5f4;
+  --fg: #0c2a32;
+  --fg-2: #3a555c;
+  --fg-muted: #5a7378;
+  --fg-faint: #7a9094;
+  --bg: #f3f8f8;
   --panel: #fff;
-  --border: oklch(0.91 0.006 250);
-  --border-2: oklch(0.89 0.006 250);
-  --line: oklch(0.94 0.006 250);
-  --soft: oklch(0.95 0.006 250);
+  --border: #d7e4e4;
+  --border-2: #c9d8d8;
+  --line: #e8f0f0;
+  --soft: #eef5f5;
   --amber: oklch(0.75 0.14 75);
-  --green: oklch(0.62 0.13 155);
+  --green: #22e07a;
   --red: oklch(0.55 0.17 25);
   --cal-day: 38px;
   --cal-row: 46px;
@@ -38,7 +43,7 @@ body {
 button, input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
 button { cursor: pointer; }
 input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible {
-  outline: 2px solid oklch(0.55 0.1 200);
+  outline: 2px solid var(--brand-mid);
   outline-offset: 1px;
 }
 ::placeholder { color: oklch(0.68 0.01 250); }
@@ -110,10 +115,10 @@ a:hover { color: var(--brand-hover); }
   width: 100%;
 }
 .field textarea { height: auto; min-height: 66px; padding: 9px 11px; line-height: 1.5; resize: vertical; }
-.inp:focus, .field input:focus, .field textarea:focus {
+.inp:focus, .field input:focus, .field textarea:focus, .field select:focus, select.inp:focus {
   outline: none;
-  border-color: oklch(0.55 0.1 200);
-  box-shadow: 0 0 0 3px oklch(0.55 0.1 200 / 0.15);
+  border-color: var(--brand-mid);
+  box-shadow: 0 0 0 3px rgb(26 154 150 / 0.18);
 }
 
 /* —— badges —— */
@@ -177,17 +182,41 @@ a:hover { color: var(--brand-hover); }
   align-items: center;
   justify-content: center;
   padding: 48px;
-  background: linear-gradient(180deg, oklch(0.97 0.004 250), oklch(0.94 0.008 250));
+  background:
+    radial-gradient(ellipse 70% 50% at 70% 40%, rgb(61 255 138 / 0.12), transparent 55%),
+    linear-gradient(180deg, #f3faf9, #dceeee);
 }
 .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 56px; }
+.logo-img {
+  display: block;
+  object-fit: contain;
+  flex: none;
+  border-radius: 8px;
+  user-select: none;
+}
+.logo-hero {
+  filter: drop-shadow(0 12px 28px rgb(11 74 88 / 0.18));
+}
+.wordmark { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1px; line-height: 1.1; }
+.wm-aman { font-weight: 600; font-size: 15px; letter-spacing: -0.02em; color: var(--brand-deep); }
+.wm-ai { font-weight: 700; font-size: 15px; letter-spacing: -0.03em; color: var(--brand); }
+.login .wm-aman, .login .wm-ai { font-size: 18px; }
+.wm-sub {
+  flex-basis: 100%;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--fg-faint);
+  margin-top: 2px;
+}
 .mark {
   width: 30px; height: 30px; border-radius: 9px;
-  background: var(--brand); color: #fff;
+  background: var(--brand-soft); color: var(--brand-deep);
   display: grid; place-items: center;
   font-weight: 700; font-size: 15px; flex: none;
+  overflow: hidden;
 }
-.mark-sm { width: 26px; height: 26px; border-radius: 8px; font-size: 13px; }
-.mark-xs { width: 24px; height: 24px; border-radius: 7px; font-size: 12px; }
+.mark-sm { width: 28px; height: 28px; border-radius: 8px; }
+.mark-xs { width: 24px; height: 24px; border-radius: 7px; }
 .login h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; max-width: 420px; margin: 0; }
 .login-sub { font-size: 14px; color: oklch(0.5 0.012 250); margin-top: 10px; max-width: 380px; }
 .login-form { display: flex; flex-direction: column; gap: 14px; margin-top: 36px; max-width: 340px; }
@@ -209,12 +238,17 @@ a:hover { color: var(--brand-hover); }
 .prev-kpis { display: flex; gap: 22px; margin-top: 12px; }
 .prev-kpis .n { font-size: 24px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
 .prev-kpis .l { font-size: 11px; color: oklch(0.55 0.012 250); }
-.pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulseDot 2s infinite; }
+.pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand-glow);
+  box-shadow: 0 0 8px var(--brand-glow);
+  animation: pulseDot 2s infinite;
+}
 .wa-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: oklch(0.45 0.012 250); }
 .bubbles { display: flex; flex-direction: column; gap: 6px; }
 .bbl { max-width: 82%; padding: 8px 11px; font-size: 12px; }
 .bbl-in { align-self: flex-start; background: oklch(0.95 0.008 250); border-radius: 12px 12px 12px 3px; }
-.bbl-out { align-self: flex-end; background: oklch(0.94 0.05 155); border-radius: 12px 12px 3px 12px; }
+.bbl-out { align-self: flex-end; background: var(--brand-soft); color: var(--brand-deep); border-radius: 12px 12px 3px 12px; }
 
 /* —— app shell —— */
 .app {
@@ -244,7 +278,7 @@ a:hover { color: var(--brand-hover); }
   font-size: 13px; text-align: left;
 }
 .nav-btn:hover { background: oklch(0.97 0.004 250); }
-.nav-btn.on { background: oklch(0.95 0.006 250); color: oklch(0.2 0.012 250); font-weight: 500; }
+.nav-btn.on { background: var(--brand-soft); color: var(--brand-deep); font-weight: 500; }
 .nav-ic { width: 16px; text-align: center; font-size: 13px; opacity: 0.85; }
 .nav-count {
   margin-left: auto;
@@ -354,7 +388,7 @@ a:hover { color: var(--brand-hover); }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   border-right: 1px solid oklch(0.95 0.004 250);
 }
-.cal-dh.today { background: oklch(0.96 0.02 200); }
+.cal-dh.today { background: var(--brand-soft); }
 .cal-dh.we { background: oklch(0.98 0.003 250); }
 .cal-dh .wd { font-size: 10px; color: var(--fg-faint); text-transform: lowercase; }
 .cal-dh .num { font-size: 13px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
