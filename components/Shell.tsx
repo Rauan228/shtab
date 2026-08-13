@@ -2,50 +2,61 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { useStore } from '../lib/store';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useAuth } from '../lib/auth';
+import { addDays, getCalendar, todayIso } from '../lib/api';
+import { useUi } from '../lib/ui';
 import { Confirm, Drawer } from './Drawer';
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
-  const { logout, objectsLabel, bookings, quickAdd, toast, properties } = useStore();
+  const { token, logout } = useAuth();
+  const { toast, openDrawer } = useUi();
+  const [pending, setPending] = useState(0);
+  const [objCount, setObjCount] = useState(0);
 
-  const pending = bookings.filter((b) => b.st === 'pending').length;
+  useEffect(() => {
+    if (!token) return;
+    const from = todayIso();
+    getCalendar(token, from, addDays(from, 45))
+      .then((r) => {
+        setObjCount(r.properties.length);
+        setPending(r.events.filter((e) => e.kind === 'booking' && e.status === 'pending').length);
+      })
+      .catch(() => {});
+  }, [token, path]);
+
   const isObj = path.startsWith('/objects') || path.startsWith('/apartments');
   const isCal = path.startsWith('/calendar');
   const isToday = path === '/today';
   const isSet = path.startsWith('/settings');
   const isDs = path.startsWith('/ds');
+  const isCard = /\/(objects|apartments)\/.+/.test(path);
 
   const title = isToday
     ? 'Сегодня'
     : isCal
       ? 'Календарь занятости'
-      : path.match(/\/objects\/.+/) || path.match(/\/apartments\/.+/)
+      : isCard
         ? 'Карточка объекта'
         : isObj
-          ? objectsLabel
+          ? 'Объекты'
           : isSet
             ? 'Настройки'
             : isDs
               ? 'Дизайн-система'
               : 'Кабинет';
 
-  const readyCount = properties.filter((p) => p.ready).length;
   const pageMeta = isToday
-    ? '13 авг 2026 · Asia/Almaty'
+    ? `${todayIso()} · Asia/Almaty`
     : isCal
-      ? `${properties.length} объектов · 30 дней`
-      : isObj && !path.match(/\/(objects|apartments)\/.+/)
-        ? `${readyCount} из ${properties.length} готовы к продаже`
-        : path.match(/\/(objects|apartments)\/.+/)
-          ? 'изменения применяются к ответам бота'
-          : isSet
-            ? 'кабинет владельца'
-            : isDs
-              ? 'токены и компоненты'
-              : '';
+      ? `${objCount} объектов`
+      : isCard
+        ? 'данные, по которым отвечает бот'
+        : isObj
+          ? 'PMS агента'
+          : '';
 
   const nav = (href: string, icon: string, label: string, on: boolean, count?: number) => (
     <Link href={href} className={`nav-btn${on ? ' on' : ''}`}>
@@ -59,16 +70,16 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="app">
       <aside className="sidebar">
         <div className="side-brand">
-          <div className="mark mark-sm">B</div>
+          <div className="mark mark-sm">S</div>
           <div>
-            <div className="t">Brand</div>
+            <div className="t">Shtab</div>
             <div className="s">Кабинет владельца</div>
           </div>
         </div>
         <div className="nav">
           {nav('/today', '◧', 'Сегодня', isToday, pending)}
           {nav('/calendar', '▤', 'Календарь', isCal)}
-          {nav('/objects', '◫', objectsLabel, isObj)}
+          {nav('/objects', '◫', 'Объекты', isObj)}
         </div>
         <div className="nav-sep" />
         <div className="nav">
@@ -88,21 +99,31 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="wa-box">
           <div className="t">
             <span className="pulse" />
-            WhatsApp подключён
+            Агент на VPS
           </div>
-          <div className="s">+7 701 234 56 78 · бот отвечает 24/7</div>
+          <div className="s">Один PMS: кабинет и WhatsApp читают одни квартиры</div>
         </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
           <div className="top-l">
-            <div className="mark mark-xs m-only">B</div>
+            <div className="mark mark-xs m-only">S</div>
             <div className="top-title">{title}</div>
             {pageMeta ? <div className="top-meta">{pageMeta}</div> : null}
           </div>
           <div className="top-r">
-            <button className="btn btn-sm btn-primary" onClick={quickAdd}>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() =>
+                openDrawer({
+                  mode: 'booking',
+                  propertyId: '',
+                  checkIn: todayIso(),
+                  checkOut: addDays(todayIso(), 2),
+                })
+              }
+            >
               + Бронь
             </button>
           </div>
@@ -117,7 +138,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </Link>
         <Link href="/objects" className={isObj ? 'on' : ''}>
           <span className="ic">◫</span>
-          {objectsLabel}
+          Объекты
         </Link>
         <Link href="/today" className={isToday ? 'on' : ''}>
           <span className="ic">◧</span>
@@ -127,7 +148,19 @@ export function Shell({ children }: { children: ReactNode }) {
           <span className="ic">⚙</span>
           Ещё
         </Link>
-        <button type="button" className="fab" onClick={quickAdd} aria-label="Новая бронь">
+        <button
+          type="button"
+          className="fab"
+          aria-label="Новая бронь"
+          onClick={() =>
+            openDrawer({
+              mode: 'booking',
+              propertyId: '',
+              checkIn: todayIso(),
+              checkOut: addDays(todayIso(), 2),
+            })
+          }
+        >
           +
         </button>
       </nav>

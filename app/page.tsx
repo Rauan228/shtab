@@ -3,14 +3,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Login } from '../components/Login';
-import { useStore } from '../lib/store';
+import { useAuth } from '../lib/auth';
 
 export default function Home() {
-  const { authed } = useStore();
+  const { ready, token } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (authed) router.replace('/calendar');
-  }, [authed, router]);
-  if (authed) return <div className="boot" />;
+    if (ready && token) router.replace('/calendar');
+  }, [ready, token, router]);
+  if (!ready || token) return <div className="boot" />;
   return <Login />;
 }

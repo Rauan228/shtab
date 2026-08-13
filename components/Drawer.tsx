@@ -1,21 +1,66 @@
 'use client';
 
-import { useEffect } from 'react';
-import { ST } from '../lib/demo';
-import { drawerDates, useStore } from '../lib/store';
-import { fmtKzt, nightsLabel } from '../lib/format';
+import { useEffect, useState } from 'react';
+import {
+  blockDates,
+  cancelBooking,
+  createBooking,
+  formatDateRu,
+  getQuote,
+  listApartments,
+  nightsBetween,
+  removeBlock,
+  updateBooking,
+  type ApartmentListItem,
+  type BookingStatus,
+  type Quote,
+} from '../lib/api';
+import { useAuth } from '../lib/auth';
+import { ST } from '../lib/status';
+import { useUi } from '../lib/ui';
 
 export function Drawer() {
-  const {
-    drawer,
-    days,
-    properties,
-    setDrawer,
-    closeDrawer,
-    saveDrawer,
-    askConfirm,
-    quoteTotal,
-  } = useStore();
+  const { token } = useAuth();
+  const { drawer, closeDrawer, flash, bump, ask } = useUi();
+  const [mode, setMode] = useState<'booking' | 'block'>('booking');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [guests, setGuests] = useState('2');
+  const [note, setNote] = useState('');
+  const [st, setSt] = useState<BookingStatus>('confirmed');
+  const [propertyId, setPropertyId] = useState('');
+  const [objects, setObjects] = useState<ApartmentListItem[]>([]);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    if (!drawer || !token) return;
+    setMode(drawer.mode === 'block' || drawer.kind === 'block' ? 'block' : 'booking');
+    setPropertyId(drawer.propertyId);
+    setName('');
+    setPhone('');
+    setGuests('2');
+    setNote('');
+    setSt('confirmed');
+    setErr('');
+    listApartments(token)
+      .then((r) => setObjects(r.apartments.filter((a) => !a.archived)))
+      .catch(() => {});
+  }, [drawer, token]);
+
+  useEffect(() => {
+    if (!token || !drawer || !propertyId) return;
+    if (mode === 'block') return;
+    getQuote(token, {
+      propertyId,
+      checkIn: drawer.checkIn,
+      checkOut: drawer.checkOut,
+      guests: Number(guests) || 2,
+    })
+      .then((r) => setQuote(r.quote))
+      .catch(() => setQuote(null));
+  }, [token, drawer, propertyId, guests, mode]);
 
   useEffect(() => {
     if (!drawer) return;
@@ -31,24 +76,67 @@ export function Drawer() {
     };
   }, [drawer, closeDrawer]);
 
-  if (!drawer) return null;
+  if (!drawer || !token) return null;
 
-  const d = drawer;
-  const prop = properties.find((p) => p.id === d.p) ?? properties[0]!;
-  const dates = drawerDates(days, d.s, d.n);
-  const isEdit = d.mode === 'edit';
-  const isBlock = d.mode === 'block' || (isEdit && d.st === 'block');
-  const isBooking = d.mode === 'booking' || (isEdit && d.st !== 'block');
+  const isEdit = drawer.mode === 'edit';
+  const isBlock = mode === 'block' || drawer.kind === 'block';
+  const nights = nightsBetween(drawer.checkIn, drawer.checkOut);
   const title = isEdit
-    ? d.st === 'block'
+    ? drawer.kind === 'block'
       ? 'Блок дат'
-      : `Бронь · ${d.name || '—'}`
-    : d.mode === 'block'
+      : 'Бронь'
+    : isBlock
       ? 'Заблокировать даты'
       : 'Новая бронь';
-  const cta = isEdit ? 'Сохранить' : d.mode === 'block' ? 'Заблокировать' : 'Создать бронь';
-  const extra = Math.max(0, (+d.g || 2) - 2) * 3000 * d.n;
-  const nightsTotal = prop.price * d.n;
+
+  const save = async () => {
+    if (!propertyId) {
+      setErr('Выберите объект');
+      return;
+    }
+    setBusy(true);
+    setErr('');
+    try {
+      if (isEdit && drawer.eventId && drawer.kind === 'block') {
+        closeDrawer();
+        return;
+      }
+      if (isEdit && drawer.eventId && drawer.kind !== 'block') {
+        await updateBooking(token, drawer.eventId, {
+          guestName: name || undefined,
+          guestPhone: phone || undefined,
+          guests: Number(guests) || 2,
+          status: st,
+        });
+        flash('Изменения сохранены');
+      } else if (isBlock) {
+        await blockDates(token, {
+          propertyId,
+          from: drawer.checkIn,
+          to: drawer.checkOut,
+          note: note || undefined,
+        });
+        flash('Даты заблокированы');
+      } else {
+        await createBooking(token, {
+          propertyId,
+          checkIn: drawer.checkIn,
+          checkOut: drawer.checkOut,
+          guests: Number(guests) || 2,
+          guestName: name || 'Гость',
+          guestPhone: phone || undefined,
+          totalPrice: quote?.totalPrice,
+        });
+        flash('Бронь создана');
+      }
+      closeDrawer();
+      bump();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Не удалось сохранить');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className="backdrop">
@@ -58,7 +146,7 @@ export function Drawer() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>{title}</div>
             <div className="mono" style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 3 }}>
-              {dates.inDate} → {dates.outDate}
+              {formatDateRu(drawer.checkIn)} → {formatDateRu(drawer.checkOut)}
             </div>
           </div>
           <button className="btn btn-icon" onClick={closeDrawer} aria-label="Закрыть">
@@ -68,42 +156,41 @@ export function Drawer() {
         <div className="drawer-b">
           {!isEdit && (
             <div className="seg">
-              <button className={d.mode === 'booking' ? 'on' : ''} onClick={() => setDrawer({ mode: 'booking' })}>
+              <button className={mode === 'booking' ? 'on' : ''} onClick={() => setMode('booking')}>
                 Бронь
               </button>
-              <button className={d.mode === 'block' ? 'on' : ''} onClick={() => setDrawer({ mode: 'block' })}>
+              <button className={mode === 'block' ? 'on' : ''} onClick={() => setMode('block')}>
                 Блок дат
               </button>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <label className="field" style={{ flex: 1 }}>
-              <span>Заезд</span>
-              <div className="inp mono" style={{ display: 'flex', alignItems: 'center' }}>
-                {dates.inDate}
-              </div>
-            </label>
-            <label className="field" style={{ flex: 1 }}>
-              <span>Выезд</span>
-              <div className="inp mono" style={{ display: 'flex', alignItems: 'center' }}>
-                {dates.outDate}
-              </div>
-            </label>
-          </div>
-          <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)', marginTop: -6 }}>
-            {prop.title} · {nightsLabel(d.n)}
+          <label className="field">
+            <span>Объект</span>
+            <select
+              className="inp"
+              value={propertyId}
+              onChange={(e) => setPropertyId(e.target.value)}
+              disabled={isEdit}
+            >
+              <option value="">Выберите…</option>
+              {objects.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.title}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>
+            {nights} {nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей'}
           </div>
 
-          {isBlock && (
+          {isBlock ? (
             <>
               <label className="field">
                 <span>Причина (видит только вы)</span>
-                <textarea
-                  value={d.note}
-                  onChange={(e) => setDrawer({ note: e.target.value })}
-                  placeholder="Ремонт, свои гости…"
-                />
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ремонт, свои гости…" />
               </label>
               <div
                 style={{
@@ -119,131 +206,127 @@ export function Drawer() {
                 Бот не будет предлагать эти даты гостям.
               </div>
             </>
-          )}
-
-          {isBooking && (
+          ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <label className="field">
                 <span>Имя гостя</span>
-                <input value={d.name} onChange={(e) => setDrawer({ name: e.target.value })} placeholder="Айгерим" />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Айгерим" />
               </label>
               <div style={{ display: 'flex', gap: 10 }}>
                 <label className="field" style={{ flex: 1 }}>
                   <span>Телефон</span>
                   <input
                     className="mono"
-                    value={d.phone}
-                    onChange={(e) => setDrawer({ phone: e.target.value })}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="+7 701 000 00 00"
                   />
                 </label>
                 <label className="field" style={{ width: 104 }}>
                   <span>Гостей</span>
-                  <input className="mono" value={d.g} onChange={(e) => setDrawer({ g: e.target.value })} />
+                  <input className="mono" value={guests} onChange={(e) => setGuests(e.target.value)} />
                 </label>
               </div>
-              <div className="field">
-                <span>Статус</span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {(['pending', 'confirmed', 'in_stay'] as const).map((id) => {
-                    const on = d.st === id;
-                    const c = ST[id];
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setDrawer({ st: id })}
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
-                          height: 32,
-                          borderRadius: 8,
-                          fontSize: 12,
-                          border: `1px solid ${on ? c.bd : 'oklch(0.9 0.006 250)'}`,
-                          background: on ? c.bg : '#fff',
-                          color: on ? c.fg : 'oklch(0.45 0.012 250)',
-                          fontWeight: on ? 500 : 400,
-                        }}
-                      >
-                        <span style={{ width: 7, height: 7, borderRadius: 2, background: c.dot }} />
-                        {c.short}
-                      </button>
-                    );
-                  })}
+              {isEdit && (
+                <div className="field">
+                  <span>Статус</span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {(['pending', 'confirmed'] as const).map((id) => {
+                      const on = st === id;
+                      const c = ST[id];
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setSt(id)}
+                          style={{
+                            flex: 1,
+                            height: 32,
+                            borderRadius: 8,
+                            fontSize: 12,
+                            border: `1px solid ${on ? c.bd : 'oklch(0.9 0.006 250)'}`,
+                            background: on ? c.bg : '#fff',
+                            color: on ? c.fg : 'oklch(0.45 0.012 250)',
+                            fontWeight: on ? 500 : 400,
+                          }}
+                        >
+                          {c.short}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-              <div className="quote">
-                <div className="q-row">
-                  <span style={{ color: 'oklch(0.5 0.012 250)' }}>
-                    {fmtKzt(prop.price)} ₸ × {d.n}
-                  </span>
-                  <span className="mono">{fmtKzt(nightsTotal)} ₸</span>
+              )}
+              {quote && (
+                <div className="quote">
+                  <div className="q-row">
+                    <span style={{ color: 'oklch(0.5 0.012 250)' }}>Ночи</span>
+                    <span className="mono">{quote.nights}</span>
+                  </div>
+                  {quote.breakdown && (
+                    <>
+                      <div className="q-row">
+                        <span style={{ color: 'oklch(0.5 0.012 250)' }}>Проживание</span>
+                        <span className="mono">{quote.breakdown.nightsTotal.toLocaleString('ru-RU')} ₸</span>
+                      </div>
+                      <div className="q-row">
+                        <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка</span>
+                        <span className="mono">{quote.breakdown.cleaningFee.toLocaleString('ru-RU')} ₸</span>
+                      </div>
+                    </>
+                  )}
+                  <div className="q-row">
+                    <span style={{ fontWeight: 500 }}>Итого</span>
+                    <span className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
+                      {quote.totalPrice.toLocaleString('ru-RU')} ₸
+                    </span>
+                  </div>
+                  {!quote.available && (
+                    <div style={{ fontSize: 12, color: 'oklch(0.52 0.16 25)' }}>
+                      {quote.reason === 'occupied' ? 'Даты заняты' : quote.reason ?? 'Недоступно'}
+                    </div>
+                  )}
                 </div>
-                <div className="q-row">
-                  <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка</span>
-                  <span className="mono">5 000 ₸</span>
-                </div>
-                <div className="q-row">
-                  <span style={{ color: 'oklch(0.5 0.012 250)' }}>Доп. гости</span>
-                  <span className="mono">{fmtKzt(extra)} ₸</span>
-                </div>
-                <div className="q-row">
-                  <span style={{ fontWeight: 500 }}>Итого</span>
-                  <span className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
-                    {fmtKzt(quoteTotal(d))} ₸
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           )}
-
-          {isEdit && (
-            <div style={{ borderTop: '1px solid oklch(0.94 0.006 250)', paddingTop: 12 }}>
-              <div className="lbl" style={{ marginBottom: 8 }}>
-                История
-              </div>
-              {[
-                ['11 авг 09:14', 'Бот принял запрос в WhatsApp'],
-                ['11 авг 09:15', 'Цена рассчитана по правилам объекта'],
-                ['12 авг 18:02', 'Владелец подтвердил бронь'],
-              ].map(([time, text]) => (
-                <div key={time} style={{ display: 'flex', gap: 9, fontSize: 11, color: 'oklch(0.5 0.012 250)', marginBottom: 8 }}>
-                  <span className="mono" style={{ flex: 'none', color: 'oklch(0.62 0.01 250)' }}>
-                    {time}
-                  </span>
-                  <span>{text}</span>
-                </div>
-              ))}
+          {err && (
+            <div className="err-box">
+              <span className="err-dot" />
+              {err}
             </div>
           )}
         </div>
         <div className="drawer-f">
-          {isEdit && (
+          {isEdit && drawer.eventId && (
             <button
               className="btn btn-danger"
               onClick={() =>
-                askConfirm({
-                  title: d.st === 'block' ? 'Снять блок?' : 'Отменить бронь?',
+                ask({
+                  title: drawer.kind === 'block' ? 'Снять блок?' : 'Отменить бронь?',
                   text:
-                    d.st === 'block'
+                    drawer.kind === 'block'
                       ? 'Даты снова станут доступны для продажи.'
-                      : 'Гость получит уведомление в WhatsApp, даты освободятся.',
-                  cta: d.st === 'block' ? 'Снять' : 'Отменить бронь',
-                  kind: 'cancel',
+                      : 'Даты освободятся в PMS — бот снова сможет их предлагать.',
+                  cta: drawer.kind === 'block' ? 'Снять' : 'Отменить бронь',
+                  onYes: async () => {
+                    if (drawer.kind === 'block') await removeBlock(token, drawer.eventId!);
+                    else await cancelBooking(token, drawer.eventId!);
+                    flash(drawer.kind === 'block' ? 'Блок снят' : 'Бронь отменена');
+                    closeDrawer();
+                    bump();
+                  },
                 })
               }
             >
-              {d.st === 'block' ? 'Снять блок' : 'Отменить бронь'}
+              {drawer.kind === 'block' ? 'Снять блок' : 'Отменить бронь'}
             </button>
           )}
           <button className="btn" style={{ marginLeft: 'auto' }} onClick={closeDrawer}>
             Отмена
           </button>
-          <button className="btn btn-primary" onClick={saveDrawer}>
-            {cta}
+          <button className="btn btn-primary" onClick={() => void save()} disabled={busy}>
+            {busy ? '…' : isEdit ? 'Сохранить' : isBlock ? 'Заблокировать' : 'Создать бронь'}
           </button>
         </div>
       </aside>
@@ -252,7 +335,7 @@ export function Drawer() {
 }
 
 export function Confirm() {
-  const { confirm, closeConfirm, doConfirm } = useStore();
+  const { confirm, closeConfirm, doConfirm } = useUi();
   if (!confirm) return null;
   return (
     <div className="modal-wrap">
@@ -266,7 +349,7 @@ export function Confirm() {
           </button>
           <button
             className="btn"
-            onClick={doConfirm}
+            onClick={() => void doConfirm()}
             style={{ border: 'none', background: 'oklch(0.55 0.17 25)', color: '#fff', fontWeight: 500 }}
           >
             {confirm.cta}

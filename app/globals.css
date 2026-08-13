@@ -100,7 +100,7 @@ a:hover { color: var(--brand-hover); }
   font-weight: 500;
   color: oklch(0.45 0.012 250);
 }
-.inp, .field input, .field textarea {
+.inp, .field input, .field textarea, .field select, select.inp {
   height: 36px;
   padding: 0 11px;
   border: 1px solid var(--border-2);

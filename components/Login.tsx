@@ -2,29 +2,43 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useStore } from '../lib/store';
+import { useAuth } from '../lib/auth';
 
 export function Login() {
-  const { login } = useStore();
+  const { login } = useAuth();
   const router = useRouter();
   const [pass, setPass] = useState('');
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e?: React.FormEvent) => {
+  const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!login(pass)) {
-      setErr(true);
+    if (!pass.trim()) {
+      setErr('Введите пароль');
       return;
     }
-    router.push('/calendar');
+    setBusy(true);
+    setErr('');
+    try {
+      const ok = await login(pass);
+      if (!ok) {
+        setErr('Неверный пароль. Попробуйте снова.');
+        return;
+      }
+      router.push('/calendar');
+    } catch {
+      setErr('Не удалось связаться с сервером агента');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="login">
       <div className="login-l">
         <div className="brand-row">
-          <div className="mark">B</div>
-          <div style={{ fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em' }}>Brand</div>
+          <div className="mark">S</div>
+          <div style={{ fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em' }}>Shtab</div>
           <div
             className="mono"
             style={{
@@ -51,41 +65,29 @@ export function Login() {
               autoComplete="current-password"
               onChange={(e) => {
                 setPass(e.target.value);
-                setErr(false);
+                setErr('');
               }}
             />
           </label>
           {err && (
             <div className="err-box">
               <span className="err-dot" />
-              Неверный пароль. Попробуйте снова.
+              {err}
             </div>
           )}
-          <button className="btn btn-primary" type="submit">
-            Войти
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? 'Вхожу…' : 'Войти'}
           </button>
-          <div className="hint-xs">Один пароль на кабинет. Забыли — напишите в поддержку в WhatsApp.</div>
+          <div className="hint-xs">Пароль кабинета = ADMIN_TOKEN на сервере агента.</div>
         </form>
       </div>
       <div className="login-r">
         <div className="preview">
           <div className="prev-card">
-            <div className="kicker">Сегодня</div>
-            <div className="prev-kpis">
-              <div>
-                <div className="n">3</div>
-                <div className="l">заезда</div>
-              </div>
-              <div>
-                <div className="n">2</div>
-                <div className="l">выезда</div>
-              </div>
-              <div>
-                <div className="n" style={{ color: 'oklch(0.6 0.14 75)' }}>
-                  4
-                </div>
-                <div className="l">ждут ответа</div>
-              </div>
+            <div className="kicker">Shtab</div>
+            <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Живой PMS</div>
+            <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 6, lineHeight: 1.5 }}>
+              Календарь, объекты и брони — те же данные, что видит бот в WhatsApp.
             </div>
           </div>
           <div className="prev-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -95,10 +97,8 @@ export function Login() {
             </div>
             <div style={{ height: 1, background: 'oklch(0.93 0.006 250)' }} />
             <div className="bubbles">
-              <div className="bbl bbl-in">Здравствуйте! Есть 2-к на 15–17 августа?</div>
-              <div className="bbl bbl-out">
-                Да, «Достык 12/4» свободна. 3 ночи — 54 000 ₸ с уборкой. Бронирую?
-              </div>
+              <div className="bbl bbl-in">Здравствуйте! Есть квартира на выходные?</div>
+              <div className="bbl bbl-out">Здравствуйте! На какие даты и сколько вас человек?</div>
             </div>
           </div>
         </div>

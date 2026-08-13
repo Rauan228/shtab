@@ -2,15 +2,15 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useStore } from '../lib/store';
+import { useAuth } from '../lib/auth';
 import { Shell } from './Shell';
 
 export function Guard({ children }: { children: ReactNode }) {
-  const { authed } = useStore();
+  const { ready, token } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (!authed) router.replace('/');
-  }, [authed, router]);
-  if (!authed) return <div className="boot" />;
+    if (ready && !token) router.replace('/');
+  }, [ready, token, router]);
+  if (!ready || !token) return <div className="boot" />;
   return <Shell>{children}</Shell>;
 }
