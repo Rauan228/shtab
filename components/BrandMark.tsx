@@ -9,7 +9,7 @@ export function BrandMark({
 }) {
   return (
     <img
-      src={hero ? '/amanai.png' : '/amanai-mark.jpg'}
+      src={hero ? '/amanai.png' : '/amanai.svg'}
       alt="AmanAI"
       width={size}
       height={size}
