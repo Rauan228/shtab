@@ -8,6 +8,7 @@ import { BrandMark } from './BrandMark';
 export function Login() {
   const { login } = useAuth();
   const router = useRouter();
+  const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,9 +22,9 @@ export function Login() {
     setBusy(true);
     setErr('');
     try {
-      const ok = await login(pass);
+      const ok = await login(email, pass);
       if (!ok) {
-        setErr('Неверный пароль. Попробуйте снова.');
+        setErr('Неверный email или пароль. Попробуйте снова.');
         return;
       }
       router.push('/calendar');
@@ -51,13 +52,27 @@ export function Login() {
         <div className="login-sub">Занятость, брони и правила, по которым AmanAI продаёт ваши объекты.</div>
         <form className="login-form" onSubmit={submit}>
           <label className="field">
-            <span>Пароль доступа</span>
+            <span>Email</span>
+            <input
+              className="inp"
+              type="email"
+              placeholder="you@mail.kz"
+              value={email}
+              autoFocus
+              autoComplete="username"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErr('');
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>Пароль</span>
             <input
               className="inp"
               type="password"
               placeholder="••••••••"
               value={pass}
-              autoFocus
               autoComplete="current-password"
               onChange={(e) => {
                 setPass(e.target.value);
@@ -74,7 +89,7 @@ export function Login() {
           <button className="btn btn-primary" type="submit" disabled={busy}>
             {busy ? 'Вхожу…' : 'Войти'}
           </button>
-          <div className="hint-xs">Пароль кабинета = ADMIN_TOKEN на сервере агента.</div>
+          <div className="hint-xs">Email и пароль, которые вам выдали для этого кабинета.</div>
         </form>
       </div>
       <div className="login-r">

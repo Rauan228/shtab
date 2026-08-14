@@ -6,7 +6,7 @@ import { TOKEN_KEY, getToken, login as apiLogin } from './api';
 interface Auth {
   ready: boolean;
   token: string | null;
-  login: (password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -28,11 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (password: string) => {
-    const ok = await apiLogin(password.trim());
-    if (!ok) return false;
-    localStorage.setItem(TOKEN_KEY, password.trim());
-    setToken(password.trim());
+  const login = useCallback(async (email: string, password: string) => {
+    const session = await apiLogin(email.trim(), password);
+    if (!session) return false;
+    localStorage.setItem(TOKEN_KEY, session);
+    setToken(session);
     return true;
   }, []);
 

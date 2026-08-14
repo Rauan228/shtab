@@ -144,13 +144,22 @@ async function req<T>(path: string, token: string, init?: RequestInit): Promise<
   return res.json() as Promise<T>;
 }
 
-export async function login(token: string): Promise<boolean> {
+export async function login(email: string, password: string): Promise<string | null> {
   const res = await fetch(`${BASE}/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ token }),
+    body: JSON.stringify(email.trim() ? { email, password } : { password }),
   });
-  return res.ok;
+  if (!res.ok) return null;
+  try {
+    const body = (await res.json()) as { ok?: boolean; token?: string };
+    if (body.token) return body.token;
+    // Old server echoed ADMIN_TOKEN as the bearer — keep that working once.
+    if (body.ok) return password;
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 // --- calendar ---
