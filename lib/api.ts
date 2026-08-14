@@ -42,6 +42,7 @@ export interface ApartmentInfo {
   id: string;
   rules?: string;
   checkinInstructions?: string;
+  description?: string;
   wifi?: { name?: string; password?: string };
   extra?: string;
 }

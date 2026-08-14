@@ -169,6 +169,16 @@ export function ObjectDetail({ id }: { id: string }) {
             <span>Адрес</span>
             <input value={property.address ?? ''} onChange={(e) => setP({ address: e.target.value })} />
           </label>
+          <label className="field">
+            <span>Описание объявления</span>
+            <textarea
+              value={info.description ?? ''}
+              onChange={(e) => setI({ description: e.target.value })}
+              placeholder="Что в квартире, что рядом, удобства. Бот отвечает гостям только по этому тексту — фен, парковка, вид, техника."
+              style={{ minHeight: 120 }}
+            />
+            <span className="hint-xs">Чего здесь нет — агент не выдумает. Галочки удобств добавим позже.</span>
+          </label>
           <div style={{ display: 'flex', gap: 10 }}>
             <label className="field" style={{ flex: 1 }}>
               <span>Цена за сутки, ₸</span>
