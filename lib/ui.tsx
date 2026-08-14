@@ -22,6 +22,9 @@ export interface ConfirmState {
 
 interface Ui {
   readOnly: boolean;
+  /** When set (ops preview), all cabinet links stay under this prefix. */
+  navPrefix: string;
+  href: (path: string) => string;
   toast: string | null;
   flash: (t: string) => void;
   drawer: DrawerState | null;
@@ -37,7 +40,22 @@ interface Ui {
 
 const Ctx = createContext<Ui | null>(null);
 
-export function UiProvider({ children, readOnly = false }: { children: ReactNode; readOnly?: boolean }) {
+export function UiProvider({
+  children,
+  readOnly = false,
+  navPrefix = '',
+}: {
+  children: ReactNode;
+  readOnly?: boolean;
+  navPrefix?: string;
+}) {
+  const href = useCallback(
+    (path: string) => {
+      const p = path.startsWith('/') ? path : `/${path}`;
+      return navPrefix ? `${navPrefix}${p}` : p;
+    },
+    [navPrefix],
+  );
   const [toast, setToast] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -61,6 +79,8 @@ export function UiProvider({ children, readOnly = false }: { children: ReactNode
         flash,
         drawer,
         readOnly,
+        navPrefix,
+        href,
         openDrawer: setDrawer,
         closeDrawer: () => setDrawer(null),
         confirm,

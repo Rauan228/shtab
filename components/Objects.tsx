@@ -15,7 +15,7 @@ import { useUi } from '../lib/ui';
 
 export function Objects() {
   const { token } = useAuth();
-  const { flash, ask, reloadTick, bump, readOnly } = useUi();
+  const { flash, ask, reloadTick, bump, readOnly, href } = useUi();
   const router = useRouter();
   const [items, setItems] = useState<ApartmentListItem[] | null>(null);
   const [tab, setTab] = useState<'active' | 'archived'>('active');
@@ -47,7 +47,7 @@ export function Objects() {
       const { property } = await createApartment(token, { title: title.trim(), basePrice: 0, maxGuests: 2 });
       flash('Объект создан — заполните цену и правила');
       bump();
-      router.push(`/objects/${property.id}`);
+      router.push(href(`/objects/${property.id}`));
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось создать');
     }
@@ -97,7 +97,7 @@ export function Objects() {
       ) : (
         <div className="obj-grid" style={{ marginTop: 14 }}>
           {list.map((o) => (
-            <div key={o.id} className="obj-card" onClick={() => router.push(`/objects/${o.id}`)}>
+            <div key={o.id} className="obj-card" onClick={() => router.push(href(`/objects/${o.id}`))}>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div className="ph">фото</div>
                 <div style={{ minWidth: 0, flex: 1 }}>

@@ -42,11 +42,14 @@ async function req<T>(path: string, token: string, init?: RequestInit): Promise<
   return res.json() as Promise<T>;
 }
 
-export async function opsLogin(email: string, password: string): Promise<string | null> {
+export async function opsLogin(ownerToken: string): Promise<string | null> {
   const res = await fetch(`${BASE}/ops/login`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${ownerToken}`,
+    },
+    body: JSON.stringify({}),
   });
   if (!res.ok) return null;
   const body = (await res.json()) as { ok?: boolean; token?: string };

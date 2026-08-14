@@ -19,7 +19,7 @@ import { useUi } from '../lib/ui';
 
 export function ObjectDetail({ id }: { id: string }) {
   const { token } = useAuth();
-  const { flash, ask } = useUi();
+  const { flash, ask, href, readOnly } = useUi();
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [rules, setRules] = useState<PropertyRules | null>(null);
@@ -71,6 +71,7 @@ export function ObjectDetail({ id }: { id: string }) {
     (photos.length > 0 ? 25 : 0);
 
   const save = async () => {
+    if (readOnly) return;
     setBusy(true);
     try {
       await saveApartment(token, id, { property, rules, info });
@@ -96,12 +97,13 @@ export function ObjectDetail({ id }: { id: string }) {
   return (
     <div className="narrow">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <button className="btn btn-xs" onClick={() => router.push('/objects')}>
+        <button className="btn btn-xs" onClick={() => router.push(href('/objects'))}>
           ← Объекты
         </button>
         <div className={`badge ${progress === 100 ? 'badge-ok' : 'badge-warn'}`}>
           {progress === 100 ? 'готов к продаже' : 'не готов'}
         </div>
+        {!readOnly && (
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button
             className="btn btn-sm"
@@ -113,7 +115,7 @@ export function ObjectDetail({ id }: { id: string }) {
                 onYes: async () => {
                   await saveApartment(token, id, { property: { archived: true } });
                   flash('Скрыт');
-                  router.push('/objects');
+                  router.push(href('/objects'));
                 },
               })
             }
@@ -130,7 +132,7 @@ export function ObjectDetail({ id }: { id: string }) {
                 onYes: async () => {
                   await deleteApartment(token, id);
                   flash('Удалён');
-                  router.push('/objects');
+                  router.push(href('/objects'));
                 },
               })
             }
@@ -138,6 +140,7 @@ export function ObjectDetail({ id }: { id: string }) {
             Удалить
           </button>
         </div>
+        )}
       </div>
 
       <div className="detail-hero">
@@ -295,6 +298,7 @@ export function ObjectDetail({ id }: { id: string }) {
             {photos.map((p, i) => (
               <div key={p.fileName} className="photo" style={{ backgroundImage: `url(${photoSrc(p.url)})`, backgroundSize: 'cover' }}>
                 {i === 0 && <span className="cover-tag">главное</span>}
+                {!readOnly && (
                 <button
                   type="button"
                   className="btn btn-xs"
@@ -307,19 +311,22 @@ export function ObjectDetail({ id }: { id: string }) {
                 >
                   ✕
                 </button>
+                )}
               </div>
             ))}
+            {!readOnly && (
             <label className="photo-add">
               <span style={{ fontSize: 16, fontWeight: 300 }}>+</span>
               <span style={{ fontSize: 9 }}>загрузить</span>
               <input type="file" accept="image/*" multiple hidden onChange={(e) => void onFiles(e.target.files)} />
             </label>
+            )}
           </div>
           <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>JPG/PNG. Эти же файлы бот шлёт в WhatsApp.</div>
         </div>
       </div>
 
-      {dirty && (
+      {dirty && !readOnly && (
         <div className="dirty-bar">
           <span style={{ fontSize: 12, flex: 1 }}>Есть несохранённые изменения</span>
           <button className="btn btn-xs" onClick={() => window.location.reload()} style={{ background: 'transparent', color: '#fff', borderColor: 'oklch(0.42 0.012 250)' }}>

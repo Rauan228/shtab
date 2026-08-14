@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useUi } from '../lib/ui';
 
 export function Settings() {
+  const { href } = useUi();
   return (
     <div className="set">
-      <Link href="/plan" className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <Link href={href('/plan')} className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>Тариф и лимиты</div>
         <div style={{ fontSize: 13, lineHeight: 1.55, color: 'oklch(0.4 0.012 250)' }}>
           Сколько квартир и диалогов осталось, что входит в подписку, как докупить пакет.

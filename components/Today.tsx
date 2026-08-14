@@ -8,7 +8,7 @@ import { useUi } from '../lib/ui';
 
 export function Today() {
   const { token } = useAuth();
-  const { openDrawer, reloadTick } = useUi();
+  const { openDrawer, reloadTick, href } = useUi();
   const router = useRouter();
   const [ops, setOps] = useState<{ tag: 'заезд' | 'выезд'; obj: string; guest: string; time: string }[]>([]);
   const [pending, setPending] = useState<CalendarEvent[]>([]);
@@ -144,7 +144,7 @@ export function Today() {
                 <div style={{ fontSize: 12, color: 'oklch(0.45 0.03 80)', marginTop: 3, lineHeight: 1.45 }}>
                   Бот их слабо продаёт: нет цены или инструкций заезда.
                 </div>
-                <button className="btn btn-xs" style={{ marginTop: 10 }} onClick={() => router.push('/objects')}>
+                <button className="btn btn-xs" style={{ marginTop: 10 }} onClick={() => router.push(href('/objects'))}>
                   Проверить объекты
                 </button>
               </div>

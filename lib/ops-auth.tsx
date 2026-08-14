@@ -6,7 +6,7 @@ import { OPS_TOKEN_KEY, getOpsToken, opsLogin } from './ops-api';
 interface OpsAuth {
   ready: boolean;
   token: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (ownerToken: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -28,8 +28,8 @@ export function OpsAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const t = await opsLogin(email.trim(), password);
+  const login = useCallback(async (ownerToken: string) => {
+    const t = await opsLogin(ownerToken);
     if (!t) return false;
     localStorage.setItem(OPS_TOKEN_KEY, t);
     setToken(t);

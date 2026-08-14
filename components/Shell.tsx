@@ -13,7 +13,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { token, logout } = useAuth();
-  const { toast, openDrawer, readOnly } = useUi();
+  const { toast, openDrawer, readOnly, navPrefix, href } = useUi();
+  const logical =
+    navPrefix && path.startsWith(navPrefix) ? path.slice(navPrefix.length) || '/calendar' : path;
   const [pending, setPending] = useState(0);
   const [objCount, setObjCount] = useState(0);
 
@@ -28,13 +30,13 @@ export function Shell({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [token, path]);
 
-  const isObj = path.startsWith('/objects') || path.startsWith('/apartments');
-  const isCal = path.startsWith('/calendar');
-  const isToday = path === '/today';
-  const isSet = path.startsWith('/settings');
-  const isPlan = path.startsWith('/plan');
-  const isDs = path.startsWith('/ds');
-  const isCard = /\/(objects|apartments)\/.+/.test(path);
+  const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
+  const isCal = logical.startsWith('/calendar') || logical === '/';
+  const isToday = logical === '/today';
+  const isSet = logical.startsWith('/settings');
+  const isPlan = logical.startsWith('/plan');
+  const isDs = logical.startsWith('/ds');
+  const isCard = /\/(objects|apartments)\/.+/.test(logical);
 
   const title = isToday
     ? 'Сегодня'
@@ -64,8 +66,8 @@ export function Shell({ children }: { children: ReactNode }) {
             ? 'лимиты и подписка'
             : '';
 
-  const nav = (href: string, icon: string, label: string, on: boolean, count?: number) => (
-    <Link href={href} className={`nav-btn${on ? ' on' : ''}`}>
+  const nav = (to: string, icon: string, label: string, on: boolean, count?: number) => (
+    <Link href={href(to)} className={`nav-btn${on ? ' on' : ''}`}>
       <span className="nav-ic">{icon}</span>
       <span>{label}</span>
       {count ? <span className="nav-count">{count}</span> : null}
@@ -88,17 +90,21 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="nav-sep" />
         <div className="nav">
           {nav('/settings', '⚙', 'Настройки', isSet)}
-          {nav('/ds', '◈', 'Дизайн-система', isDs)}
+          {!readOnly && nav('/ds', '◈', 'Дизайн-система', isDs)}
           <button
             className="nav-btn"
             onClick={() => {
-              if (readOnly) return;
+              if (readOnly) {
+                const org = navPrefix.split('/').pop();
+                router.push(org ? `/ops/clients/${org}` : '/ops/clients');
+                return;
+              }
               logout();
               router.push('/');
             }}
           >
             <span className="nav-ic">⇥</span>
-            <span>Выйти</span>
+            <span>{readOnly ? 'Закрыть просмотр' : 'Выйти'}</span>
           </button>
         </div>
         <div className="wa-box">
@@ -143,19 +149,19 @@ export function Shell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="mbar">
-        <Link href="/calendar" className={isCal ? 'on' : ''}>
+        <Link href={href('/calendar')} className={isCal ? 'on' : ''}>
           <span className="ic">▤</span>
           Календарь
         </Link>
-        <Link href="/objects" className={isObj ? 'on' : ''}>
+        <Link href={href('/objects')} className={isObj ? 'on' : ''}>
           <span className="ic">◫</span>
           Объекты
         </Link>
-        <Link href="/today" className={isToday ? 'on' : ''}>
+        <Link href={href('/today')} className={isToday ? 'on' : ''}>
           <span className="ic">◧</span>
           Сегодня
         </Link>
-        <Link href="/settings" className={isSet ? 'on' : ''}>
+        <Link href={href('/settings')} className={isSet ? 'on' : ''}>
           <span className="ic">⚙</span>
           Ещё
         </Link>

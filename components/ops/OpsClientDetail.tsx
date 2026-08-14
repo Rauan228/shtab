@@ -34,7 +34,7 @@ export function OpsClientDetail({ id }: { id: string }) {
             {o.planName} · {o.priceKzt.toLocaleString('ru-RU')} ₸/мес · {o.status}
           </div>
         </div>
-        <Link href={`/ops/preview/${o.id}`} className="btn btn-primary">
+        <Link href={`/ops/preview/${o.id}/calendar`} className="btn btn-primary">
           Открыть кабинет (просмотр)
         </Link>
       </div>

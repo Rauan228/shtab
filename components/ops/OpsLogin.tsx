@@ -1,26 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getToken } from '../../lib/api';
 import { useOpsAuth } from '../../lib/ops-auth';
 import { BrandMark } from '../BrandMark';
 
 export function OpsLogin() {
   const { login } = useOpsAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('ops@aman.ai');
-  const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const ownerToken = typeof window !== 'undefined' ? getToken() : null;
 
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    const tok = getToken();
+    if (!tok) {
+      setErr('Сначала войдите в кабинет через pilot-local');
+      return;
+    }
     setBusy(true);
     setErr('');
     try {
-      const ok = await login(email, pass);
+      const ok = await login(tok);
       if (!ok) {
-        setErr('Неверный вход в админку');
+        setErr('Админка открывается только из тестового кабинета (pilot-local)');
         return;
       }
       router.push('/ops');
@@ -42,40 +48,37 @@ export function OpsLogin() {
           </div>
         </div>
         <h1>Админка</h1>
-        <div className="login-sub">Клиенты, тарифы, лимиты. Кабинеты владельцев — отдельно.</div>
+        <div className="login-sub">
+          Только из тестового кабинета: сначала войдите на главной через <b>pilot-local</b>, потом сюда.
+        </div>
         <form className="login-form" onSubmit={submit}>
-          <label className="field">
-            <span>Email</span>
-            <input className="inp" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
-          </label>
-          <label className="field">
-            <span>Пароль</span>
-            <input
-              className="inp"
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              autoComplete="current-password"
-            />
-          </label>
           {err && (
             <div className="err-box">
               <span className="err-dot" />
               {err}
             </div>
           )}
-          <button className="btn btn-primary" type="submit" disabled={busy}>
-            {busy ? '…' : 'Войти'}
+          {!ownerToken && (
+            <div className="err-box">
+              <span className="err-dot" />
+              Нет сессии кабинета.{' '}
+              <Link href="/" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                Войти как pilot-local
+              </Link>
+            </div>
+          )}
+          <button className="btn btn-primary" type="submit" disabled={busy || !ownerToken}>
+            {busy ? '…' : 'Открыть админку'}
           </button>
         </form>
       </div>
       <div className="login-r">
         <div className="preview">
           <div className="prev-card">
-            <div className="kicker">Ops</div>
-            <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600 }}>Один WaveSpeed на всех</div>
+            <div className="kicker">Тестовая среда</div>
+            <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600 }}>org-pilot навсегда</div>
             <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-              WhatsApp-instance — свой у клиента. Лимиты режет тариф, не ключ LLM.
+              Клиентские кабинеты сюда не пускаем. Просмотр чужого кабинета — только чтение.
             </div>
           </div>
         </div>
