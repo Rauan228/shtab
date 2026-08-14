@@ -578,6 +578,15 @@ a:hover { color: var(--brand-hover); }
   .pack-grid { grid-template-columns: 1fr; }
   .plan-hero { flex-direction: column; }
 }
+.ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ops-table th, .ops-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.ops-table th { font-size: 11px; color: var(--fg-faint); font-weight: 500; }
+.ops-preview-bar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 8px 16px;
+  background: #0b4a58; color: #fff; font-size: 13px;
+}
 .swatch { height: 52px; border-radius: 9px; border: 1px solid oklch(0.9 0.006 250); }
 .token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 

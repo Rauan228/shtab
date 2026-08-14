@@ -13,7 +13,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { token, logout } = useAuth();
-  const { toast, openDrawer } = useUi();
+  const { toast, openDrawer, readOnly } = useUi();
   const [pending, setPending] = useState(0);
   const [objCount, setObjCount] = useState(0);
 
@@ -92,6 +92,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <button
             className="nav-btn"
             onClick={() => {
+              if (readOnly) return;
               logout();
               router.push('/');
             }}
@@ -119,19 +120,23 @@ export function Shell({ children }: { children: ReactNode }) {
             {pageMeta ? <div className="top-meta">{pageMeta}</div> : null}
           </div>
           <div className="top-r">
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() =>
-                openDrawer({
-                  mode: 'booking',
-                  propertyId: '',
-                  checkIn: todayIso(),
-                  checkOut: addDays(todayIso(), 2),
-                })
-              }
-            >
-              + Бронь
-            </button>
+            {readOnly ? (
+              <span className="badge badge-warn">только просмотр</span>
+            ) : (
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() =>
+                  openDrawer({
+                    mode: 'booking',
+                    propertyId: '',
+                    checkIn: todayIso(),
+                    checkOut: addDays(todayIso(), 2),
+                  })
+                }
+              >
+                + Бронь
+              </button>
+            )}
           </div>
         </header>
         <div className="content fade">{children}</div>
@@ -154,21 +159,23 @@ export function Shell({ children }: { children: ReactNode }) {
           <span className="ic">⚙</span>
           Ещё
         </Link>
-        <button
-          type="button"
-          className="fab"
-          aria-label="Новая бронь"
-          onClick={() =>
-            openDrawer({
-              mode: 'booking',
-              propertyId: '',
-              checkIn: todayIso(),
-              checkOut: addDays(todayIso(), 2),
-            })
-          }
-        >
-          +
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            className="fab"
+            aria-label="Новая бронь"
+            onClick={() =>
+              openDrawer({
+                mode: 'booking',
+                propertyId: '',
+                checkIn: todayIso(),
+                checkOut: addDays(todayIso(), 2),
+              })
+            }
+          >
+            +
+          </button>
+        )}
       </nav>
 
       <Drawer />

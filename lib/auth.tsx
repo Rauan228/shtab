@@ -12,11 +12,22 @@ interface Auth {
 
 const Ctx = createContext<Auth | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+export function AuthProvider({
+  children,
+  tokenOverride,
+}: {
+  children: ReactNode;
+  tokenOverride?: string;
+}) {
+  const [token, setToken] = useState<string | null>(tokenOverride ?? null);
+  const [ready, setReady] = useState(Boolean(tokenOverride));
 
   useEffect(() => {
+    if (tokenOverride !== undefined) {
+      setToken(tokenOverride);
+      setReady(true);
+      return;
+    }
     setToken(getToken());
     setReady(true);
     const sync = () => setToken(getToken());
@@ -26,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('kz-auth-lost', sync);
       window.removeEventListener('storage', sync);
     };
-  }, []);
+  }, [tokenOverride]);
 
   const login = useCallback(async (email: string, password: string) => {
     const session = await apiLogin(email.trim(), password);

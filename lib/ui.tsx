@@ -21,6 +21,7 @@ export interface ConfirmState {
 }
 
 interface Ui {
+  readOnly: boolean;
   toast: string | null;
   flash: (t: string) => void;
   drawer: DrawerState | null;
@@ -36,7 +37,7 @@ interface Ui {
 
 const Ctx = createContext<Ui | null>(null);
 
-export function UiProvider({ children }: { children: ReactNode }) {
+export function UiProvider({ children, readOnly = false }: { children: ReactNode; readOnly?: boolean }) {
   const [toast, setToast] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -59,6 +60,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
         toast,
         flash,
         drawer,
+        readOnly,
         openDrawer: setDrawer,
         closeDrawer: () => setDrawer(null),
         confirm,

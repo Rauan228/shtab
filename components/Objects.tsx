@@ -15,7 +15,7 @@ import { useUi } from '../lib/ui';
 
 export function Objects() {
   const { token } = useAuth();
-  const { flash, ask, reloadTick, bump } = useUi();
+  const { flash, ask, reloadTick, bump, readOnly } = useUi();
   const router = useRouter();
   const [items, setItems] = useState<ApartmentListItem[] | null>(null);
   const [tab, setTab] = useState<'active' | 'archived'>('active');
@@ -64,9 +64,11 @@ export function Objects() {
             Архив · {archived.length}
           </button>
         </div>
-        <button className="btn btn-primary" onClick={() => void add()}>
-          + Добавить объект
-        </button>
+        {!readOnly && (
+          <button className="btn btn-primary" onClick={() => void add()}>
+            + Добавить объект
+          </button>
+        )}
       </div>
 
       {err && (

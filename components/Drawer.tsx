@@ -22,7 +22,7 @@ import { useUi } from '../lib/ui';
 
 export function Drawer() {
   const { token } = useAuth();
-  const { drawer, closeDrawer, flash, bump, ask } = useUi();
+  const { drawer, closeDrawer, flash, bump, ask, readOnly } = useUi();
   const [mode, setMode] = useState<'booking' | 'block'>('booking');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -392,8 +392,8 @@ export function Drawer() {
           <button className="btn" style={{ marginLeft: 'auto' }} onClick={closeDrawer}>
             Отмена
           </button>
-          <button className="btn btn-primary" onClick={() => void save()} disabled={busy}>
-            {busy ? '…' : isEdit ? 'Сохранить' : isBlock ? 'Заблокировать' : 'Создать бронь'}
+          <button className="btn btn-primary" onClick={() => void save()} disabled={busy || readOnly}>
+            {busy ? '…' : readOnly ? 'Только просмотр' : isEdit ? 'Сохранить' : isBlock ? 'Заблокировать' : 'Создать бронь'}
           </button>
         </div>
       </aside>
