@@ -120,6 +120,34 @@ a:hover { color: var(--brand-hover); }
   border-color: var(--brand-mid);
   box-shadow: 0 0 0 3px rgb(26 154 150 / 0.18);
 }
+.date-row { display: flex; gap: 10px; }
+.date-row input[type="date"] {
+  color-scheme: light;
+  cursor: pointer;
+}
+.date-row input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.65; }
+.nights-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.nights-row button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: #fff;
+  font-size: 11px;
+}
+.nights-row button:disabled { opacity: 0.45; }
+.nights-row button.on {
+  border-color: var(--brand-mid);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 500;
+}
+.nights-hint { font-size: 11px; color: oklch(0.58 0.012 250); margin-left: 4px; }
 
 /* —— badges —— */
 .badge {
@@ -403,6 +431,7 @@ a:hover { color: var(--brand-hover); }
   width: var(--cal-day); flex: none;
   border-right: 1px solid oklch(0.95 0.004 250);
   cursor: crosshair;
+  user-select: none;
 }
 .cal-cell.we { background: oklch(0.985 0.003 250); }
 .cal-cell.drag { background: oklch(0.9 0.05 200); }

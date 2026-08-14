@@ -5,6 +5,7 @@ import {
   blockDates,
   cancelBooking,
   createBooking,
+  addDays,
   formatDateRu,
   getQuote,
   listApartments,
@@ -31,13 +32,18 @@ export function Drawer() {
   const [propertyId, setPropertyId] = useState('');
   const [objects, setObjects] = useState<ApartmentListItem[]>([]);
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0;
 
   useEffect(() => {
     if (!drawer || !token) return;
     setMode(drawer.mode === 'block' || drawer.kind === 'block' ? 'block' : 'booking');
     setPropertyId(drawer.propertyId);
+    setCheckIn(drawer.checkIn);
+    setCheckOut(drawer.checkOut);
     setName('');
     setPhone('');
     setGuests('2');
@@ -49,18 +55,38 @@ export function Drawer() {
       .catch(() => {});
   }, [drawer, token]);
 
+  const setIn = (v: string) => {
+    setErr('');
+    setCheckIn(v);
+    if (v && checkOut && checkOut <= v) setCheckOut(addDays(v, 1));
+  };
+  const setOut = (v: string) => {
+    setErr('');
+    if (checkIn && v && v <= checkIn) {
+      setCheckIn(v);
+      setCheckOut(addDays(v, Math.max(1, nights || 1)));
+      return;
+    }
+    setCheckOut(v);
+  };
+  const setNights = (n: number) => {
+    if (!checkIn) return;
+    setErr('');
+    setCheckOut(addDays(checkIn, n));
+  };
+
   useEffect(() => {
-    if (!token || !drawer || !propertyId) return;
+    if (!token || !drawer || !propertyId || !checkIn || !checkOut) return;
     if (mode === 'block') return;
     getQuote(token, {
       propertyId,
-      checkIn: drawer.checkIn,
-      checkOut: drawer.checkOut,
+      checkIn,
+      checkOut,
       guests: Number(guests) || 2,
     })
       .then((r) => setQuote(r.quote))
       .catch(() => setQuote(null));
-  }, [token, drawer, propertyId, guests, mode]);
+  }, [token, drawer, propertyId, guests, mode, checkIn, checkOut]);
 
   useEffect(() => {
     if (!drawer) return;
@@ -80,7 +106,6 @@ export function Drawer() {
 
   const isEdit = drawer.mode === 'edit';
   const isBlock = mode === 'block' || drawer.kind === 'block';
-  const nights = nightsBetween(drawer.checkIn, drawer.checkOut);
   const title = isEdit
     ? drawer.kind === 'block'
       ? 'Блок дат'
@@ -94,6 +119,10 @@ export function Drawer() {
       setErr('Выберите объект');
       return;
     }
+    if (!checkIn || !checkOut || checkOut <= checkIn) {
+      setErr('Укажите заезд и выезд (выезд позже заезда)');
+      return;
+    }
     setBusy(true);
     setErr('');
     try {
@@ -103,6 +132,8 @@ export function Drawer() {
       }
       if (isEdit && drawer.eventId && drawer.kind !== 'block') {
         await updateBooking(token, drawer.eventId, {
+          checkIn,
+          checkOut,
           guestName: name || undefined,
           guestPhone: phone || undefined,
           guests: Number(guests) || 2,
@@ -112,16 +143,16 @@ export function Drawer() {
       } else if (isBlock) {
         await blockDates(token, {
           propertyId,
-          from: drawer.checkIn,
-          to: drawer.checkOut,
+          from: checkIn,
+          to: checkOut,
           note: note || undefined,
         });
         flash('Даты заблокированы');
       } else {
         await createBooking(token, {
           propertyId,
-          checkIn: drawer.checkIn,
-          checkOut: drawer.checkOut,
+          checkIn,
+          checkOut,
           guests: Number(guests) || 2,
           guestName: name || 'Гость',
           guestPhone: phone || undefined,
@@ -146,7 +177,7 @@ export function Drawer() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>{title}</div>
             <div className="mono" style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 3 }}>
-              {formatDateRu(drawer.checkIn)} → {formatDateRu(drawer.checkOut)}
+              {checkIn && checkOut ? `${formatDateRu(checkIn)} → ${formatDateRu(checkOut)}` : 'укажите даты'}
             </div>
           </div>
           <button className="btn btn-icon" onClick={closeDrawer} aria-label="Закрыть">
@@ -182,8 +213,44 @@ export function Drawer() {
             </select>
           </label>
 
-          <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>
-            {nights} {nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей'}
+          <div className="date-row">
+            <label className="field" style={{ flex: 1 }}>
+              <span>Заезд</span>
+              <input
+                className="inp mono"
+                type="date"
+                value={checkIn}
+                onChange={(e) => setIn(e.target.value)}
+              />
+            </label>
+            <label className="field" style={{ flex: 1 }}>
+              <span>Выезд</span>
+              <input
+                className="inp mono"
+                type="date"
+                value={checkOut}
+                min={checkIn ? addDays(checkIn, 1) : undefined}
+                onChange={(e) => setOut(e.target.value)}
+              />
+            </label>
+          </div>
+          <div className="nights-row">
+            {([1, 2, 3, 7, 14] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={nights === n ? 'on' : ''}
+                onClick={() => setNights(n)}
+                disabled={!checkIn}
+              >
+                {n} {n === 1 ? 'ночь' : n < 5 ? 'ночи' : 'ночей'}
+              </button>
+            ))}
+            <span className="nights-hint">
+              {nights > 0
+                ? `${nights} ${nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей'}`
+                : 'выберите даты в календаре'}
+            </span>
           </div>
 
           {isBlock ? (

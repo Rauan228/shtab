@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDays,
   formatDateRu,
@@ -43,6 +43,9 @@ export function CalendarView() {
   const [err, setErr] = useState('');
   const [drag, setDrag] = useState<{ p: string; a: number; b: number } | null>(null);
   const [mProp, setMProp] = useState('');
+  const dragRef = useRef(drag);
+  const movedRef = useRef(false);
+  dragRef.current = drag;
 
   const today = todayIso();
   const from = useMemo(() => addDays(today, offset * 14), [today, offset]);
@@ -81,17 +84,53 @@ export function CalendarView() {
     [from, today],
   );
 
-  const endDrag = () => {
-    if (!drag) return;
-    const a = Math.min(drag.a, drag.b);
-    const b = Math.max(drag.a, drag.b);
-    openDrawer({
-      mode: 'booking',
-      propertyId: drag.p,
-      checkIn: isoFrom(from, a),
-      checkOut: isoFrom(from, b + 1),
+  const finishRange = useCallback(
+    (p: string, i0: number, i1: number) => {
+      const a = Math.min(i0, i1);
+      const b = Math.max(i0, i1);
+      openDrawer({
+        mode: 'booking',
+        propertyId: p,
+        checkIn: isoFrom(from, a),
+        checkOut: isoFrom(from, b + 1),
+      });
+      setDrag(null);
+    },
+    [from, openDrawer],
+  );
+
+  useEffect(() => {
+    const up = () => {
+      const d = dragRef.current;
+      if (!d) return;
+      if (movedRef.current && d.a !== d.b) {
+        finishRange(d.p, d.a, d.b);
+        return;
+      }
+      setDrag(null);
+    };
+    window.addEventListener('pointerup', up);
+    return () => window.removeEventListener('pointerup', up);
+  }, [finishRange]);
+
+  const onCellDown = (p: string, i: number) => (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    if (e.button !== 0) return;
+    movedRef.current = false;
+    setDrag({ p, a: i, b: i });
+  };
+
+  const onCellEnter = (p: string, i: number) => {
+    setDrag((x) => {
+      if (!x || x.p !== p) return x;
+      if (x.b !== i) movedRef.current = true;
+      return { ...x, b: i };
     });
-    setDrag(null);
+  };
+
+  const onCellClick = (p: string, i: number) => {
+    if (movedRef.current) return;
+    finishRange(p, i, i);
   };
 
   const filters: { id: 'all' | CalStatus; label: string }[] = [
@@ -151,7 +190,7 @@ export function CalendarView() {
         </div>
       ) : (
         <>
-          <div className="cal-wrap desktop-cal" onMouseUp={endDrag} onMouseLeave={() => setDrag(null)}>
+          <div className="cal-wrap desktop-cal">
             <div className="cal-scroll">
               <div className="cal-names">
                 <div className="cal-h">Объекты</div>
@@ -181,14 +220,19 @@ export function CalendarView() {
                   <div key={p.id} className="cal-track" style={{ width: days.length * CW }}>
                     <div className="cal-cells">
                       {days.map((d, i) => {
-                        const inDrag =
-                          drag && drag.p === p.id && i >= Math.min(drag.a, drag.b) && i <= Math.max(drag.a, drag.b);
+                        const inRange = !!(
+                          drag &&
+                          drag.p === p.id &&
+                          i >= Math.min(drag.a, drag.b) &&
+                          i <= Math.max(drag.a, drag.b)
+                        );
                         return (
                           <div
                             key={d.iso}
-                            className={`cal-cell${d.weekend ? ' we' : ''}${inDrag ? ' drag' : ''}`}
-                            onMouseDown={() => setDrag({ p: p.id, a: i, b: i })}
-                            onMouseEnter={() => setDrag((x) => (x && x.p === p.id ? { ...x, b: i } : x))}
+                            className={`cal-cell${d.weekend ? ' we' : ''}${inRange ? ' drag' : ''}`}
+                            onPointerDown={onCellDown(p.id, i)}
+                            onPointerEnter={() => onCellEnter(p.id, i)}
+                            onClick={() => onCellClick(p.id, i)}
                           />
                         );
                       })}
@@ -260,7 +304,7 @@ export function CalendarView() {
               );
             })}
             <div style={{ marginLeft: 'auto', fontSize: 11, color: 'oklch(0.6 0.01 250)' }}>
-              Выделите даты мышью, чтобы добавить бронь или блок
+              Потяните мышью диапазон — или кликните день и поправьте даты в форме.
             </div>
           </div>
 
@@ -299,12 +343,7 @@ export function CalendarView() {
                         kind: b.kind,
                       });
                     } else if (mP) {
-                      openDrawer({
-                        mode: 'booking',
-                        propertyId: mP.id,
-                        checkIn: dd.iso,
-                        checkOut: isoFrom(from, i + 1),
-                      });
+                      finishRange(mP.id, i, i);
                     }
                   }}
                 >
