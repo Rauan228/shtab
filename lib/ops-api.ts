@@ -42,18 +42,33 @@ async function req<T>(path: string, token: string, init?: RequestInit): Promise<
   return res.json() as Promise<T>;
 }
 
-export async function opsLogin(ownerToken: string): Promise<string | null> {
+export async function opsGate(ownerToken: string | null): Promise<boolean> {
+  if (!ownerToken) return false;
+  const res = await fetch(`${BASE}/ops/gate`, {
+    headers: { authorization: `Bearer ${ownerToken}` },
+  });
+  return res.ok;
+}
+
+export async function opsLogin(
+  email: string,
+  password: string,
+  ownerToken: string,
+): Promise<'ok' | 'denied' | 'bad'> {
   const res = await fetch(`${BASE}/ops/login`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${ownerToken}`,
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) return null;
+  if (res.status === 404) return 'denied';
+  if (!res.ok) return 'bad';
   const body = (await res.json()) as { ok?: boolean; token?: string };
-  return body.token ?? null;
+  if (!body.token) return 'bad';
+  if (typeof window !== 'undefined') localStorage.setItem(OPS_TOKEN_KEY, body.token);
+  return 'ok';
 }
 
 export interface OpsOverview {

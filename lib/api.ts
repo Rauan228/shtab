@@ -5,6 +5,7 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE ?? '/api/admin';
 
 export const TOKEN_KEY = 'kz_ai_manager_admin_token';
+export const MUST_CHANGE_KEY = 'kz_ai_must_change_pw';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
 
@@ -144,7 +145,10 @@ async function req<T>(path: string, token: string, init?: RequestInit): Promise<
   return res.json() as Promise<T>;
 }
 
-export async function login(email: string, password: string): Promise<string | null> {
+export async function login(
+  email: string,
+  password: string,
+): Promise<{ token: string; mustChangePassword: boolean } | null> {
   const res = await fetch(`${BASE}/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -152,14 +156,17 @@ export async function login(email: string, password: string): Promise<string | n
   });
   if (!res.ok) return null;
   try {
-    const body = (await res.json()) as { ok?: boolean; token?: string };
-    if (body.token) return body.token;
-    // Old server echoed ADMIN_TOKEN as the bearer — keep that working once.
-    if (body.ok) return password;
+    const body = (await res.json()) as { ok?: boolean; token?: string; mustChangePassword?: boolean };
+    if (body.token) return { token: body.token, mustChangePassword: Boolean(body.mustChangePassword) };
+    if (body.ok) return { token: password, mustChangePassword: false };
   } catch {
     /* ignore */
   }
   return null;
+}
+
+export async function changePassword(token: string, current: string, next: string): Promise<void> {
+  await req('/change-password', token, { method: 'POST', body: JSON.stringify({ current, next }) });
 }
 
 export interface Subscription {

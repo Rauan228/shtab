@@ -6,11 +6,12 @@ import { useAuth } from '../lib/auth';
 import { Shell } from './Shell';
 
 export function Guard({ children }: { children: ReactNode }) {
-  const { ready, token } = useAuth();
+  const { ready, token, mustChangePassword } = useAuth();
   const router = useRouter();
   useEffect(() => {
     if (ready && !token) router.replace('/');
-  }, [ready, token, router]);
-  if (!ready || !token) return <div className="boot" />;
+    else if (ready && token && mustChangePassword) router.replace('/welcome-password');
+  }, [ready, token, mustChangePassword, router]);
+  if (!ready || !token || mustChangePassword) return <div className="boot" />;
   return <Shell>{children}</Shell>;
 }

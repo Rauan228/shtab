@@ -1,41 +1,60 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken } from '../../lib/api';
+import { opsGate } from '../../lib/ops-api';
 import { useOpsAuth } from '../../lib/ops-auth';
 import { BrandMark } from '../BrandMark';
+import { NotFound } from '../NotFound';
 
 export function OpsLogin() {
   const { login } = useOpsAuth();
   const router = useRouter();
+  const [gate, setGate] = useState<'wait' | 'ok' | 'hide'>('wait');
+  const [email, setEmail] = useState('ops@aman.ai');
+  const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const ownerToken = typeof window !== 'undefined' ? getToken() : null;
+
+  useEffect(() => {
+    const tok = getToken();
+    if (!tok) {
+      setGate('hide');
+      return;
+    }
+    void opsGate(tok).then((ok) => setGate(ok ? 'ok' : 'hide'));
+  }, []);
 
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const tok = getToken();
     if (!tok) {
-      setErr('Сначала войдите в кабинет через pilot-local');
+      setGate('hide');
       return;
     }
     setBusy(true);
     setErr('');
     try {
-      const ok = await login(tok);
-      if (!ok) {
-        setErr('Админка открывается только из тестового кабинета (pilot-local)');
+      const result = await login(email, pass, tok);
+      if (result === 'denied') {
+        setGate('hide');
+        return;
+      }
+      if (result !== 'ok') {
+        setErr('Неверный email или пароль');
         return;
       }
       router.push('/ops');
     } catch {
-      setErr('Сервер недоступен');
+      setErr('Не удалось связаться с сервером');
     } finally {
       setBusy(false);
     }
   };
+
+  if (gate === 'wait') return <div className="boot" />;
+  if (gate === 'hide') return <NotFound />;
 
   return (
     <div className="login">
@@ -48,37 +67,52 @@ export function OpsLogin() {
           </div>
         </div>
         <h1>Админка</h1>
-        <div className="login-sub">
-          Только из тестового кабинета: сначала войдите на главной через <b>pilot-local</b>, потом сюда.
-        </div>
+        <div className="login-sub">Клиенты, тарифы и лимиты AmanAI.</div>
         <form className="login-form" onSubmit={submit}>
+          <label className="field">
+            <span>Email</span>
+            <input
+              className="inp"
+              type="email"
+              value={email}
+              autoComplete="username"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErr('');
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>Пароль</span>
+            <input
+              className="inp"
+              type="password"
+              value={pass}
+              autoComplete="current-password"
+              onChange={(e) => {
+                setPass(e.target.value);
+                setErr('');
+              }}
+            />
+          </label>
           {err && (
             <div className="err-box">
               <span className="err-dot" />
               {err}
             </div>
           )}
-          {!ownerToken && (
-            <div className="err-box">
-              <span className="err-dot" />
-              Нет сессии кабинета.{' '}
-              <Link href="/" style={{ color: 'inherit', textDecoration: 'underline' }}>
-                Войти как pilot-local
-              </Link>
-            </div>
-          )}
-          <button className="btn btn-primary" type="submit" disabled={busy || !ownerToken}>
-            {busy ? '…' : 'Открыть админку'}
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? '…' : 'Войти'}
           </button>
         </form>
       </div>
       <div className="login-r">
         <div className="preview">
           <div className="prev-card">
-            <div className="kicker">Тестовая среда</div>
-            <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600 }}>org-pilot навсегда</div>
+            <div className="kicker">Ops</div>
+            <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600 }}>Один WaveSpeed на всех</div>
             <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-              Клиентские кабинеты сюда не пускаем. Просмотр чужого кабинета — только чтение.
+              WhatsApp у каждого клиента свой. Лимиты — по тарифу.
             </div>
           </div>
         </div>

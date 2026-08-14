@@ -27,6 +27,10 @@ export function Login() {
         setErr('Неверный email или пароль. Попробуйте снова.');
         return;
       }
+      if (typeof window !== 'undefined' && localStorage.getItem('kz_ai_must_change_pw') === '1') {
+        router.push('/welcome-password');
+        return;
+      }
       router.push('/calendar');
     } catch {
       setErr('Не удалось связаться с сервером агента');
