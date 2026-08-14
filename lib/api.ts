@@ -162,6 +162,25 @@ export async function login(email: string, password: string): Promise<string | n
   return null;
 }
 
+export interface Subscription {
+  period: { from: string; label: string };
+  org: { id: string; name: string; status: string };
+  user: { email: string };
+  plan: { id: string; name: string; priceKzt: number; forWhom: string; perks: string[] };
+  usage: {
+    properties: { used: number; max: number };
+    dialogs: { used: number; included: number; extra: number; max: number };
+  };
+  idleDays: number;
+  features: { id: string; label: string; on: boolean }[];
+  packs: { id: string; name: string; dialogs: number; priceKzt: number }[];
+  overagePerDialogKzt: number;
+}
+
+export function getSubscription(token: string): Promise<Subscription> {
+  return req<Subscription>('/subscription', token);
+}
+
 // --- calendar ---
 
 export function getCalendar(token: string, from: string, to: string): Promise<CalendarResponse> {

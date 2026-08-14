@@ -32,6 +32,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const isCal = path.startsWith('/calendar');
   const isToday = path === '/today';
   const isSet = path.startsWith('/settings');
+  const isPlan = path.startsWith('/plan');
   const isDs = path.startsWith('/ds');
   const isCard = /\/(objects|apartments)\/.+/.test(path);
 
@@ -43,11 +44,13 @@ export function Shell({ children }: { children: ReactNode }) {
         ? 'Карточка объекта'
         : isObj
           ? 'Объекты'
-          : isSet
-            ? 'Настройки'
-            : isDs
-              ? 'Дизайн-система'
-              : 'Кабинет';
+          : isPlan
+            ? 'Тариф'
+            : isSet
+              ? 'Настройки'
+              : isDs
+                ? 'Дизайн-система'
+                : 'Кабинет';
 
   const pageMeta = isToday
     ? `${todayIso()} · Asia/Almaty`
@@ -57,7 +60,9 @@ export function Shell({ children }: { children: ReactNode }) {
         ? 'данные, по которым отвечает бот'
         : isObj
           ? 'PMS агента'
-          : '';
+          : isPlan
+            ? 'лимиты и подписка'
+            : '';
 
   const nav = (href: string, icon: string, label: string, on: boolean, count?: number) => (
     <Link href={href} className={`nav-btn${on ? ' on' : ''}`}>
@@ -78,6 +83,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {nav('/today', '◧', 'Сегодня', isToday, pending)}
           {nav('/calendar', '▤', 'Календарь', isCal)}
           {nav('/objects', '◫', 'Объекты', isObj)}
+          {nav('/plan', '◎', 'Тариф', isPlan)}
         </div>
         <div className="nav-sep" />
         <div className="nav">
