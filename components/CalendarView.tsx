@@ -23,7 +23,8 @@ function isoFrom(start: string, i: number): string {
   return addDays(start, i);
 }
 
-function eventStatus(e: CalendarEvent, today: string): CalStatus {
+function eventStatus(e: CalendarEvent, today: string): CalStatus | null {
+  if (e.status === 'cancelled') return null;
   if (e.kind === 'block') return 'block';
   const st = lifecycleStage(e, today);
   if (st === 'instay') return 'in_stay';
@@ -193,9 +194,10 @@ export function CalendarView() {
                       })}
                     </div>
                     {events
-                      .filter((e) => e.propertyId === p.id)
+                      .filter((e) => e.propertyId === p.id && e.status !== 'cancelled')
                       .map((e) => {
                         const st = eventStatus(e, today);
+                        if (!st) return null;
                         if (filter !== 'all' && st !== filter) return null;
                         const s = nightsBetween(from, e.begin);
                         const n = nightsBetween(e.begin < from ? from : e.begin, e.end);
@@ -272,7 +274,13 @@ export function CalendarView() {
           <div className="m-days">
             {days.slice(0, 16).map((dd, i) => {
               const b = mP
-                ? events.find((e) => e.propertyId === mP.id && dd.iso >= e.begin && dd.iso < e.end)
+                ? events.find(
+                    (e) =>
+                      e.propertyId === mP.id &&
+                      e.status !== 'cancelled' &&
+                      dd.iso >= e.begin &&
+                      dd.iso < e.end,
+                  )
                 : undefined;
               const st = b ? eventStatus(b, today) : null;
               const c = st ? ST[st] : null;
