@@ -122,6 +122,7 @@ export function OpsClients() {
               <th>Тариф</th>
               <th>Объекты</th>
               <th>Диалоги</th>
+              <th>WhatsApp</th>
               <th>Статус</th>
             </tr>
           </thead>
@@ -139,6 +140,15 @@ export function OpsClients() {
                 </td>
                 <td className="mono">
                   {r.dialogs.used}/{r.dialogs.max}
+                </td>
+                <td>
+                  {r.whatsapp?.connected
+                    ? r.whatsapp.phone
+                      ? `+${r.whatsapp.phone}`
+                      : r.whatsapp.authorized
+                        ? 'подключён'
+                        : 'QR'
+                    : '—'}
                 </td>
                 <td>{r.status}</td>
               </tr>

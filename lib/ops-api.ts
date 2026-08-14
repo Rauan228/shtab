@@ -91,6 +91,16 @@ export function getOpsOverview(token: string): Promise<OpsOverview> {
   return req('/overview', token);
 }
 
+export interface PublicWhatsapp {
+  connected: boolean;
+  instanceId?: string;
+  apiUrl?: string;
+  phone?: string;
+  label?: string;
+  authorized?: boolean;
+  checkedAt?: string;
+}
+
 export interface OpsOrgRow {
   id: string;
   name: string;
@@ -100,6 +110,7 @@ export interface OpsOrgRow {
   status: string;
   properties: { used: number; max: number };
   dialogs: { used: number; max: number };
+  whatsapp?: PublicWhatsapp;
 }
 
 export function listOpsOrgs(token: string): Promise<{ orgs: OpsOrgRow[] }> {
@@ -125,6 +136,7 @@ export interface OpsOrgDetail {
     limits: { maxProperties: number; maxDialogs: number; extraDialogs: number };
     features: Record<string, unknown>;
     notes: string;
+    whatsapp?: PublicWhatsapp;
   };
   usage: {
     properties: { used: number; max: number };
@@ -142,4 +154,23 @@ export function previewOpsOrg(
   id: string,
 ): Promise<{ ok: boolean; token: string; org: { id: string; name: string } }> {
   return req(`/orgs/${id}/preview`, token, { method: 'POST' });
+}
+
+export function bindOpsWhatsapp(
+  token: string,
+  id: string,
+  body: { apiUrl: string; idInstance: string; apiTokenInstance: string; label?: string },
+): Promise<{ ok: boolean; live: boolean; whatsapp: PublicWhatsapp; probe?: { state?: string; phone?: string } }> {
+  return req(`/orgs/${id}/whatsapp`, token, { method: 'POST', body: JSON.stringify(body) });
+}
+
+export function checkOpsWhatsapp(
+  token: string,
+  id: string,
+): Promise<{ ok: boolean; whatsapp: PublicWhatsapp; error?: string }> {
+  return req(`/orgs/${id}/whatsapp/check`, token, { method: 'POST' });
+}
+
+export function unbindOpsWhatsapp(token: string, id: string): Promise<{ ok: boolean; whatsapp: PublicWhatsapp }> {
+  return req(`/orgs/${id}/whatsapp`, token, { method: 'DELETE' });
 }
