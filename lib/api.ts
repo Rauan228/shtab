@@ -9,6 +9,14 @@ export const MUST_CHANGE_KEY = 'kz_ai_must_change_pw';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
 
+export type PaymentPhase =
+  | 'awaiting_deposit'
+  | 'deposit_claimed'
+  | 'deposit_paid'
+  | 'awaiting_stay'
+  | 'stay_claimed'
+  | 'stay_paid';
+
 export interface Property {
   id: string;
   title: string;
@@ -43,6 +51,7 @@ export interface ApartmentInfo {
   id: string;
   rules?: string;
   checkinInstructions?: string;
+  keyCode?: string;
   description?: string;
   wifi?: { name?: string; password?: string };
   extra?: string;
@@ -80,6 +89,9 @@ export interface Booking {
   totalPrice: number;
   checkoutTime?: string;
   createdAt?: string;
+  paymentPhase?: PaymentPhase;
+  depositAmount?: number;
+  stayAmount?: number;
 }
 
 export interface Quote {
@@ -247,6 +259,17 @@ export function updateBooking(
 
 export function cancelBooking(token: string, id: string): Promise<{ booking: Booking }> {
   return req(`/bookings/${id}`, token, { method: 'DELETE' });
+}
+
+export function confirmBookingPayment(
+  token: string,
+  id: string,
+  kind: 'deposit' | 'stay',
+): Promise<{ ok: boolean; booking: Booking; guestText: string }> {
+  return req(`/bookings/${id}/confirm-payment`, token, {
+    method: 'POST',
+    body: JSON.stringify({ kind }),
+  });
 }
 
 // --- blocks ---

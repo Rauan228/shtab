@@ -257,10 +257,19 @@ export function ObjectDetail({ id }: { id: string }) {
             <span className="sec-n">03</span>Тексты клиенту
           </div>
           <label className="field">
-            <span>Инструкция по заезду</span>
+            <span>Инструкция по заезду (без кода ключницы)</span>
             <textarea
               value={info.checkinInstructions ?? ''}
               onChange={(e) => setI({ checkinInstructions: e.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Код ключницы / сейфа — гость получит только после полной оплаты</span>
+            <input
+              className="mono"
+              value={info.keyCode ?? ''}
+              onChange={(e) => setI({ keyCode: e.target.value })}
+              placeholder="4567"
             />
           </label>
           <div style={{ display: 'flex', gap: 10 }}>

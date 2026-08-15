@@ -11,8 +11,11 @@ import {
   listApartments,
   nightsBetween,
   removeBlock,
+  confirmBookingPayment,
+  getBooking,
   updateBooking,
   type ApartmentListItem,
+  type Booking,
   type BookingStatus,
   type Quote,
 } from '../lib/api';
@@ -36,6 +39,7 @@ export function Drawer() {
   const [checkOut, setCheckOut] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [pay, setPay] = useState<Booking | null>(null);
   const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0;
 
   useEffect(() => {
@@ -50,6 +54,18 @@ export function Drawer() {
     setNote('');
     setSt('confirmed');
     setErr('');
+    setPay(null);
+    if (drawer.mode === 'edit' && drawer.kind !== 'block' && drawer.eventId) {
+      getBooking(token, drawer.eventId)
+        .then((r) => {
+          setPay(r.booking);
+          if (r.booking.guestName) setName(r.booking.guestName);
+          if (r.booking.guestPhone) setPhone(r.booking.guestPhone);
+          setGuests(String(r.booking.guests));
+          setSt(r.booking.status === 'cancelled' ? 'pending' : r.booking.status);
+        })
+        .catch(() => {});
+    }
     listApartments(token)
       .then((r) => setObjects(r.apartments.filter((a) => !a.archived)))
       .catch(() => {});
@@ -294,6 +310,90 @@ export function Drawer() {
                   <input className="mono" value={guests} onChange={(e) => setGuests(e.target.value)} />
                 </label>
               </div>
+              {isEdit && pay && (
+                <div
+                  style={{
+                    border: '1px solid oklch(0.9 0.006 250)',
+                    borderRadius: 9,
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>Оплата Kaspi</div>
+                  <div style={{ fontSize: 12, color: 'oklch(0.45 0.012 250)', lineHeight: 1.45 }}>
+                    Сейчас:{' '}
+                    {pay.paymentPhase === 'deposit_claimed'
+                      ? 'гость сказал, что перевёл депозит — проверьте Kaspi'
+                      : pay.paymentPhase === 'stay_claimed'
+                        ? 'гость сказал, что перевёл остаток — проверьте Kaspi'
+                        : pay.paymentPhase === 'deposit_paid'
+                          ? 'депозит подтверждён, ждём полную оплату'
+                          : pay.paymentPhase === 'stay_paid'
+                            ? 'всё оплачено, код ключа отправлен'
+                            : pay.paymentPhase === 'awaiting_stay'
+                              ? 'ждём остаток за проживание'
+                              : 'ждём депозит'}
+                  </div>
+                  {(pay.paymentPhase === 'awaiting_deposit' ||
+                    pay.paymentPhase === 'deposit_claimed' ||
+                    !pay.paymentPhase) &&
+                    pay.status === 'pending' && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busy || readOnly}
+                        onClick={() =>
+                          void (async () => {
+                            setBusy(true);
+                            setErr('');
+                            try {
+                              const r = await confirmBookingPayment(token, pay.id, 'deposit');
+                              setPay(r.booking);
+                              setSt('confirmed');
+                              flash('Депозит подтверждён — гостю ушла инструкция без кода');
+                              bump();
+                            } catch (e) {
+                              setErr(e instanceof Error ? e.message : 'не подтвердилось');
+                            } finally {
+                              setBusy(false);
+                            }
+                          })()
+                        }
+                      >
+                        Депозит пришёл
+                      </button>
+                    )}
+                  {(pay.paymentPhase === 'deposit_paid' ||
+                    pay.paymentPhase === 'awaiting_stay' ||
+                    pay.paymentPhase === 'stay_claimed') && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={busy || readOnly}
+                      onClick={() =>
+                        void (async () => {
+                          setBusy(true);
+                          setErr('');
+                          try {
+                            const r = await confirmBookingPayment(token, pay.id, 'stay');
+                            setPay(r.booking);
+                            flash('Полная оплата подтверждена — гостю ушёл код ключа');
+                            bump();
+                          } catch (e) {
+                            setErr(e instanceof Error ? e.message : 'не подтвердилось');
+                          } finally {
+                            setBusy(false);
+                          }
+                        })()
+                      }
+                    >
+                      Полная оплата пришла
+                    </button>
+                  )}
+                </div>
+              )}
               {isEdit && (
                 <div className="field">
                   <span>Статус</span>
