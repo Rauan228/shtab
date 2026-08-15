@@ -223,6 +223,9 @@ a:hover { color: var(--brand-hover); }
   user-select: none;
 }
 .logo-hero {
+  width: min(220px, 70%);
+  height: auto;
+  border-radius: 14px;
   filter: drop-shadow(0 12px 28px rgb(11 74 88 / 0.18));
 }
 .wordmark { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1px; line-height: 1.1; }

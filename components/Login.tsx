@@ -99,7 +99,7 @@ export function Login() {
       <div className="login-r">
         <div className="preview">
           <div style={{ display: 'grid', placeItems: 'center', padding: '8px 0 4px' }}>
-            <BrandMark size={168} hero />
+            <BrandMark size={220} hero />
           </div>
           <div className="prev-card">
             <div className="kicker">AmanAI</div>

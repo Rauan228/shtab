@@ -7,13 +7,25 @@ export function BrandMark({
   size?: number;
   hero?: boolean;
 }) {
+  if (hero) {
+    return (
+      <img
+        src="/amanai-word.png"
+        alt="AmanAI"
+        width={size}
+        height={Math.round(size * (980 / 900))}
+        className="logo-img logo-hero"
+        draggable={false}
+      />
+    );
+  }
   return (
     <img
-      src={hero ? '/amanai.png' : '/amanai.svg'}
+      src="/amanai-mark.png"
       alt="AmanAI"
       width={size}
       height={size}
-      className={`logo-img${hero ? ' logo-hero' : ''}`}
+      className="logo-img"
       draggable={false}
     />
   );
