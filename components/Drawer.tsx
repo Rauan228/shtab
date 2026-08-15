@@ -351,8 +351,12 @@ export function Drawer() {
                             try {
                               const r = await confirmBookingPayment(token, pay.id, 'deposit');
                               setPay(r.booking);
-                              setSt('confirmed');
-                              flash('Депозит подтверждён — гостю ушла инструкция без кода');
+                              setSt(r.booking.status === 'cancelled' ? 'pending' : r.booking.status);
+                              flash(
+                                r.booking.status === 'pending'
+                                  ? 'Депозит подтверждён — бронь снова в «Ждут» на полную оплату'
+                                  : 'Депозит подтверждён — гостю ушла инструкция без кода',
+                              );
                               bump();
                             } catch (e) {
                               setErr(e instanceof Error ? e.message : 'не подтвердилось');
@@ -379,6 +383,7 @@ export function Drawer() {
                           try {
                             const r = await confirmBookingPayment(token, pay.id, 'stay');
                             setPay(r.booking);
+                            setSt(r.booking.status === 'cancelled' ? 'pending' : r.booking.status);
                             flash('Полная оплата подтверждена — гостю ушёл код ключа');
                             bump();
                           } catch (e) {

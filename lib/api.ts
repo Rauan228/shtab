@@ -68,6 +68,7 @@ export interface CalendarEvent {
   status: BookingStatus;
   guestName?: string;
   totalPrice?: number;
+  paymentPhase?: PaymentPhase;
 }
 
 export interface CalendarResponse {
@@ -463,6 +464,13 @@ export const STAGE_LABEL: Record<LifecycleStage, string> = {
   done: 'Завершена',
   cancelled: 'Отменена',
 };
+
+export function waitingPayHint(phase?: PaymentPhase): string {
+  if (phase === 'deposit_paid' || phase === 'awaiting_stay' || phase === 'stay_claimed') {
+    return 'полная оплата';
+  }
+  return 'депозит';
+}
 
 /** Ordered range of ISO dates, inclusive. */
 export function dateRange(from: string, to: string): string[] {

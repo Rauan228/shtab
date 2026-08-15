@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { addDays, formatDateRu, getCalendar, listApartments, todayIso, type CalendarEvent } from '../lib/api';
+import {
+  addDays,
+  formatDateRu,
+  getCalendar,
+  listApartments,
+  todayIso,
+  waitingPayHint,
+  type CalendarEvent,
+} from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
 
@@ -112,7 +120,7 @@ export function Today() {
                       {titles[b.propertyId]} · {b.guestName}
                     </div>
                     <div className="mono" style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)' }}>
-                      {formatDateRu(b.begin)} → {formatDateRu(b.end)}
+                      {formatDateRu(b.begin)} → {formatDateRu(b.end)} · {waitingPayHint(b.paymentPhase)}
                     </div>
                   </div>
                   <button
