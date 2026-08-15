@@ -219,14 +219,13 @@ a:hover { color: var(--brand-hover); }
   display: block;
   object-fit: contain;
   flex: none;
-  border-radius: 8px;
+  background: transparent;
   user-select: none;
 }
 .logo-hero {
   width: min(220px, 70%);
   height: auto;
-  border-radius: 14px;
-  filter: drop-shadow(0 12px 28px rgb(11 74 88 / 0.18));
+  filter: drop-shadow(0 12px 28px rgb(11 74 88 / 0.16));
 }
 .wordmark { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1px; line-height: 1.1; }
 .wm-aman { font-weight: 600; font-size: 15px; letter-spacing: -0.02em; color: var(--brand-deep); }
