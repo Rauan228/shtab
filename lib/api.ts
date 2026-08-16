@@ -405,11 +405,16 @@ export function markDialogSeen(token: string, chatId: string): Promise<{ ok: boo
  * as a query param on that route only.
  */
 export function dialogMediaSrc(url: string, token: string): string {
-  // Private guest media: authenticated route, token as a query param because
-  // <img> cannot send an Authorization header.
+  // The API normalizes every image to /api/admin/dialogs/{media,photo}/… so the
+  // cabinet loads it same-origin (the API's own host is plain HTTP on the pilot
+  // VPS, which an HTTPS cabinet would block as mixed content). <img> cannot send
+  // an Authorization header, so the session token rides as a query param.
+  if (url.startsWith('/api/admin/dialogs/')) {
+    const path = url.slice('/api/admin'.length);
+    return `${BASE}${path}?token=${encodeURIComponent(token)}`;
+  }
+  // Legacy shapes, still rendered as-is rather than shown broken.
   if (url.startsWith('/dialogs/')) return `${BASE}${url}?token=${encodeURIComponent(token)}`;
-  // Apartment photos are public. Absolute when PUBLIC_URL is configured on the
-  // server; relative otherwise, in which case the cabinet's own proxy serves them.
   return url;
 }
 
