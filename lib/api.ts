@@ -273,6 +273,22 @@ export function confirmBookingPayment(
   });
 }
 
+export type PayoutMethod = 'kaspi_phone' | 'pay_link';
+
+export interface OrgPayout {
+  method: PayoutMethod;
+  kaspiPhone?: string;
+  payLink?: string;
+}
+
+export function getPayout(token: string): Promise<{ payout: OrgPayout | null }> {
+  return req('/payout', token);
+}
+
+export function savePayout(token: string, payout: OrgPayout): Promise<{ ok: boolean; payout: OrgPayout }> {
+  return req('/payout', token, { method: 'PUT', body: JSON.stringify(payout) });
+}
+
 // --- blocks ---
 
 export function blockDates(
@@ -359,9 +375,22 @@ export interface DialogBookingBrief {
   paymentPhase?: PaymentPhase;
 }
 
+/** Which messenger a conversation came from. */
+export type Channel = 'whatsapp' | 'telegram';
+
+export const CHANNEL_LABEL: Record<Channel, string> = {
+  whatsapp: 'WA',
+  telegram: 'TG',
+};
+
 export interface DialogListItem {
+  /** Channel-prefixed key, e.g. `wa:777…` — unique across messengers. */
   chatId: string;
+  channel: Channel;
   guestName?: string;
+  /** Telegram @username, when the guest has one. */
+  guestUsername?: string;
+  /** Phone on WhatsApp; @username or `id …` on Telegram, which has no phone. */
   guestPhone: string;
   lastAt: string;
   lastPreview: string;
@@ -373,11 +402,12 @@ export type DialogFilter = 'all' | 'live' | 'awaiting_pay' | 'today';
 
 export function listDialogs(
   token: string,
-  opts: { q?: string; filter?: DialogFilter } = {},
+  opts: { q?: string; filter?: DialogFilter; channel?: Channel } = {},
 ): Promise<{ dialogs: DialogListItem[] }> {
   const p = new URLSearchParams();
   if (opts.q) p.set('q', opts.q);
   if (opts.filter && opts.filter !== 'all') p.set('filter', opts.filter);
+  if (opts.channel) p.set('channel', opts.channel);
   const qs = p.toString();
   return req(`/dialogs${qs ? `?${qs}` : ''}`, token);
 }
@@ -386,7 +416,14 @@ export function getDialog(
   token: string,
   chatId: string,
 ): Promise<{
-  chat: { chatId: string; guestName?: string; guestPhone: string; booking?: DialogBookingBrief };
+  chat: {
+    chatId: string;
+    channel: Channel;
+    guestName?: string;
+    guestUsername?: string;
+    guestPhone: string;
+    booking?: DialogBookingBrief;
+  };
   messages: DialogMessage[];
 }> {
   return req(`/dialogs/${encodeURIComponent(chatId)}`, token);

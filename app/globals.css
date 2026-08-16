@@ -558,6 +558,26 @@ a:hover { color: var(--brand-hover); }
 
 /* —— settings / ds —— */
 .set { max-width: 620px; display: flex; flex-direction: column; gap: 12px; }
+.pay-method { display: flex; flex-direction: column; gap: 8px; }
+.pay-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  background: #fff;
+  text-align: left;
+  white-space: normal;
+}
+.pay-opt:hover { background: oklch(0.98 0.006 180); }
+.pay-opt.on {
+  border-color: var(--brand-mid);
+  box-shadow: 0 0 0 3px rgb(26 154 150 / 0.16);
+}
+.pay-opt b { font-size: 13px; font-weight: 600; }
+.pay-opt span { font-size: 12px; color: oklch(0.5 0.012 250); line-height: 1.45; }
 .plan-hero { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
 .plan-list { margin: 10px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: oklch(0.4 0.012 250); }
 .plan-feats { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
@@ -940,3 +960,20 @@ a:hover { color: var(--brand-hover); }
   display: grid; place-items: center;
   font-size: 11px; color: var(--fg-faint);
 }
+
+/* —— channel chips (WA / TG) ——
+   Text chips, not brand icons: they stay legible at 10px, need no external
+   assets, and read correctly in greyscale. Colours are the messengers' own,
+   pulled toward the cabinet palette so a row of them isn't a fruit salad. */
+.dlg-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.ch-chip {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  flex: none;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.ch-whatsapp { background: oklch(0.94 0.06 155); color: oklch(0.42 0.11 155); }
+.ch-telegram { background: oklch(0.93 0.05 245); color: oklch(0.45 0.13 245); }
