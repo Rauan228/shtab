@@ -7,6 +7,18 @@ export function Settings() {
   const { href } = useUi();
   return (
     <div className="set">
+      {/* Объекты left the mobile bar to make room for Диалоги, so this is the
+          way back to it on a phone. */}
+      <Link
+        href={href('/objects')}
+        className="card card-pad"
+        style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
+        <div style={{ fontSize: 13, lineHeight: 1.55, color: 'oklch(0.4 0.012 250)' }}>
+          Квартиры, цены, фото и инструкции заезда — данные, по которым отвечает бот.
+        </div>
+      </Link>
       <Link href={href('/plan')} className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>Тариф и лимиты</div>
         <div style={{ fontSize: 13, lineHeight: 1.55, color: 'oklch(0.4 0.012 250)' }}>

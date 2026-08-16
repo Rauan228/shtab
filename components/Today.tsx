@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   addDays,
   formatDateRu,
   getCalendar,
   listApartments,
+  listDialogs,
   todayIso,
   waitingPayHint,
   type CalendarEvent,
@@ -24,6 +26,8 @@ export function Today() {
   const [notReady, setNotReady] = useState(0);
   const [occ, setOcc] = useState('—');
   const [err, setErr] = useState('');
+  /** bookingId → chatId, so a pending row can jump straight into its chat. */
+  const [chatByBooking, setChatByBooking] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!token) return;
@@ -50,6 +54,16 @@ export function Today() {
         setOcc(`${Math.min(99, Math.round((booked / slots) * 20))}%`);
       })
       .catch((e) => setErr(e instanceof Error ? e.message : 'Ошибка загрузки'));
+
+    // Which pending bookings actually have a WhatsApp thread behind them. A
+    // missing entry simply hides the «Чат» button instead of linking nowhere.
+    listDialogs(token)
+      .then((r) => {
+        const map: Record<string, string> = {};
+        for (const d of r.dialogs) if (d.booking) map[d.booking.id] = d.chatId;
+        setChatByBooking(map);
+      })
+      .catch(() => {});
   }, [token, reloadTick]);
 
   return (
@@ -123,6 +137,11 @@ export function Today() {
                       {formatDateRu(b.begin)} → {formatDateRu(b.end)} · {waitingPayHint(b.paymentPhase)}
                     </div>
                   </div>
+                  {chatByBooking[b.id] ? (
+                    <Link href={href(`/dialogs/${chatByBooking[b.id]}`)} className="btn btn-xs">
+                      Чат
+                    </Link>
+                  ) : null}
                   <button
                     className="btn btn-xs"
                     onClick={() =>

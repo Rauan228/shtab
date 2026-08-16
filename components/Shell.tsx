@@ -4,10 +4,19 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
-import { addDays, getCalendar, todayIso } from '../lib/api';
+import { addDays, getCalendar, listDialogs, todayIso } from '../lib/api';
 import { useUi } from '../lib/ui';
 import { BrandMark, Wordmark } from './BrandMark';
 import { Confirm, Drawer } from './Drawer';
+
+/** Russian plural: 1 диалог, 2 диалога, 5 диалогов. */
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
 
 export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -18,6 +27,8 @@ export function Shell({ children }: { children: ReactNode }) {
     navPrefix && path.startsWith(navPrefix) ? path.slice(navPrefix.length) || '/calendar' : path;
   const [pending, setPending] = useState(0);
   const [objCount, setObjCount] = useState(0);
+  const [unread, setUnread] = useState(0);
+  const [liveChats, setLiveChats] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -28,11 +39,18 @@ export function Shell({ children }: { children: ReactNode }) {
         setPending(r.events.filter((e) => e.kind === 'booking' && e.status === 'pending').length);
       })
       .catch(() => {});
+    listDialogs(token)
+      .then((r) => {
+        setUnread(r.dialogs.filter((d) => d.unread).length);
+        setLiveChats(r.dialogs.length);
+      })
+      .catch(() => {});
   }, [token, path]);
 
   const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
   const isCal = logical.startsWith('/calendar') || logical === '/';
   const isToday = logical === '/today';
+  const isDlg = logical.startsWith('/dialogs');
   const isSet = logical.startsWith('/settings');
   const isPlan = logical.startsWith('/plan');
   const isDs = logical.startsWith('/ds');
@@ -40,7 +58,9 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const title = isToday
     ? 'Сегодня'
-    : isCal
+    : isDlg
+      ? 'Диалоги'
+      : isCal
       ? 'Календарь занятости'
       : isCard
         ? 'Карточка объекта'
@@ -56,7 +76,13 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const pageMeta = isToday
     ? `${todayIso()} · Asia/Almaty`
-    : isCal
+    : isDlg
+      ? unread > 0
+        ? `${unread} ${plural(unread, 'новый', 'новых', 'новых')}`
+        : liveChats > 0
+          ? `${liveChats} ${plural(liveChats, 'диалог', 'диалога', 'диалогов')}`
+          : 'нет новых'
+      : isCal
       ? `${objCount} объектов`
       : isCard
         ? 'данные, по которым отвечает бот'
@@ -83,6 +109,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <div className="nav">
           {nav('/today', '◧', 'Сегодня', isToday, pending)}
+          {nav('/dialogs', '◐', 'Диалоги', isDlg, unread)}
           {nav('/calendar', '▤', 'Календарь', isCal)}
           {nav('/objects', '◫', 'Объекты', isObj)}
           {nav('/plan', '◎', 'Тариф', isPlan)}
@@ -149,23 +176,25 @@ export function Shell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="mbar">
-        <Link href={href('/calendar')} className={isCal ? 'on' : ''}>
-          <span className="ic">▤</span>
-          Календарь
-        </Link>
-        <Link href={href('/objects')} className={isObj ? 'on' : ''}>
-          <span className="ic">◫</span>
-          Объекты
-        </Link>
         <Link href={href('/today')} className={isToday ? 'on' : ''}>
           <span className="ic">◧</span>
           Сегодня
         </Link>
-        <Link href={href('/settings')} className={isSet ? 'on' : ''}>
+        {/* On the move the owner checks what the bot answered, so Диалоги takes
+            a bar slot and Объекты moves under «Ещё» (§1). */}
+        <Link href={href('/dialogs')} className={isDlg ? 'on' : ''}>
+          <span className="ic">◐</span>
+          Диалоги
+        </Link>
+        <Link href={href('/calendar')} className={isCal ? 'on' : ''}>
+          <span className="ic">▤</span>
+          Календарь
+        </Link>
+        <Link href={href('/settings')} className={isSet || isObj ? 'on' : ''}>
           <span className="ic">⚙</span>
           Ещё
         </Link>
-        {!readOnly && (
+        {!readOnly && !isDlg && (
           <button
             type="button"
             className="fab"

@@ -8,6 +8,7 @@ import { AuthProvider } from '../../lib/auth';
 import { UiProvider } from '../../lib/ui';
 import { Shell } from '../Shell';
 import { CalendarView } from '../CalendarView';
+import { Dialogs } from '../Dialogs';
 import { Objects } from '../Objects';
 import { ObjectDetail } from '../ObjectDetail';
 import { Today } from '../Today';
@@ -18,6 +19,7 @@ function PreviewBody({ slug }: { slug: string[] }) {
   const head = slug[0] ?? 'calendar';
   if ((head === 'objects' || head === 'apartments') && slug[1]) return <ObjectDetail id={slug[1]!} />;
   if (head === 'objects' || head === 'apartments') return <Objects />;
+  if (head === 'dialogs') return <Dialogs {...(slug[1] ? { chatId: slug[1] } : {})} />;
   if (head === 'today') return <Today />;
   if (head === 'plan') return <Plan />;
   if (head === 'settings') return <Settings />;

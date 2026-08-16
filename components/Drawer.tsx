@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   blockDates,
   cancelBooking,
@@ -23,9 +24,19 @@ import { useAuth } from '../lib/auth';
 import { ST } from '../lib/status';
 import { useUi } from '../lib/ui';
 
+/**
+ * WhatsApp chat id for a typed phone: digits only, KZ "8…" normalized to "7…",
+ * exactly as the agent stores it. Empty when the number is too short to be real.
+ */
+function chatIdOf(raw: string): string {
+  const d = raw.replace(/\D/g, '');
+  const norm = d.length === 11 && d.startsWith('8') ? `7${d.slice(1)}` : d;
+  return norm.length >= 10 ? norm : '';
+}
+
 export function Drawer() {
   const { token } = useAuth();
-  const { drawer, closeDrawer, flash, bump, ask, readOnly } = useUi();
+  const { drawer, closeDrawer, flash, bump, ask, readOnly, href } = useUi();
   const [mode, setMode] = useState<'booking' | 'block'>('booking');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -310,6 +321,18 @@ export function Drawer() {
                   <input className="mono" value={guests} onChange={(e) => setGuests(e.target.value)} />
                 </label>
               </div>
+              {/* The chat id IS the phone, so a number is enough to link across.
+                  No phone → no link, rather than a button that 404s. */}
+              {isEdit && chatIdOf(phone) && (
+                <Link
+                  href={href(`/dialogs/${chatIdOf(phone)}`)}
+                  className="btn btn-xs"
+                  style={{ alignSelf: 'flex-start' }}
+                  onClick={() => closeDrawer()}
+                >
+                  Открыть диалог
+                </Link>
+              )}
               {isEdit && pay && (
                 <div
                   style={{

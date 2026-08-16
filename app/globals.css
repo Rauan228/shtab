@@ -683,3 +683,260 @@ a:hover { color: var(--brand-hover); }
   .kpi-grid { grid-template-columns: 1fr; }
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* —— loading skeleton —— */
+.skel {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--soft) 0%, #fff 50%, var(--soft) 100%);
+  background-size: 600px 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+/* —— dialogs (agent inbox) —— */
+
+/*
+ * The inbox fills the window under the topbar instead of sitting inside the
+ * padded .content box — otherwise the two columns float in a gutter and the
+ * screen reads as a card, not a mailbox.
+ */
+.content:has(.dlg-split) { padding: 0; min-height: 0; }
+.dlg-split {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  height: calc(100vh - 56px);
+  /* Children own their scrolling; without this the grid stretches to its
+     content and the inner overflow:auto never engages. */
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.dlg-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border-right: 1px solid var(--border);
+}
+.dlg-list-h {
+  flex: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dlg-search { height: 32px; font-size: 12px; }
+.dlg-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.dlg-filters .fbtn { height: 26px; padding: 0 9px; font-size: 11px; }
+
+.dlg-rows { flex: 1; min-height: 0; overflow-y: auto; }
+.dlg-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 64px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  background: transparent;
+  text-align: left;
+}
+.dlg-row:hover { background: oklch(0.97 0.004 250); }
+.dlg-row.on { background: var(--brand-soft); border-left-color: var(--brand); }
+.dlg-ava {
+  flex: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: 13px; font-weight: 600;
+}
+.dlg-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dlg-row-top { display: flex; align-items: baseline; gap: 8px; }
+.dlg-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; }
+.dlg-time { flex: none; font-size: 11px; color: var(--fg-faint); }
+.dlg-row-bot { display: flex; align-items: center; gap: 8px; }
+.dlg-prev { flex: 1; min-width: 0; font-size: 13px; color: var(--fg-muted); }
+.dlg-dot {
+  flex: none;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+.dlg-chip { align-self: flex-start; }
+
+.dlg-empty, .dlg-none {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 20px;
+  text-align: center;
+  color: oklch(0.55 0.012 250);
+  font-size: 13px;
+}
+.dlg-empty b, .dlg-none b { color: var(--fg-2); font-size: 13px; }
+.dlg-empty { height: auto; padding: 40px 20px; }
+
+/* min-height:0 all the way down: a flex item defaults to min-height:auto, which
+   refuses to shrink below its content — that is what let the feed grow past the
+   viewport and hide the newest bubble behind the mobile nav. */
+.dlg-pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.dlg-thread { display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
+
+.dlg-head {
+  flex: none;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+.dlg-head-n { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.dlg-head-s { font-size: 11px; color: var(--fg-faint); }
+/* Back arrow is a mobile affordance; the desktop split needs no navigation. */
+.dlg-back {
+  display: none;
+  width: 30px; height: 30px;
+  flex: none;
+  border: none; background: transparent;
+  font-size: 22px; line-height: 1; color: var(--fg-2);
+}
+
+.dlg-feed { flex: 1; min-height: 0; overflow-y: auto; background: var(--bg); }
+.dlg-feed-in {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dlg-day, .dlg-sys {
+  align-self: center;
+  font-size: 11px;
+  color: var(--fg-faint);
+  padding: 3px 10px;
+  margin: 6px 0;
+}
+.dlg-sys {
+  background: oklch(0.95 0.006 250);
+  border-radius: 999px;
+  color: var(--fg-muted);
+}
+
+/* Bubbles extend the pair already used on the login preview. */
+.dlg-feed .bbl {
+  max-width: 82%;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.bbl-owner { background: #fff; border: 1px solid var(--border-2); color: var(--fg); }
+.bbl-tx { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bbl-cap { font-size: 12px; font-weight: 500; }
+.bbl-link { color: var(--brand); text-decoration: underline; overflow-wrap: anywhere; }
+.bbl-out .bbl-link { color: var(--brand-deep); }
+.bbl-t { align-self: flex-end; font-size: 10px; opacity: 0.6; }
+
+.bbl-photos { display: grid; gap: 4px; grid-template-columns: 1fr; }
+.bbl-photos.multi { grid-template-columns: 1fr 1fr; }
+.bbl-ph { padding: 0; border: none; background: none; line-height: 0; }
+.bbl-ph img {
+  width: 100%;
+  height: 116px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+/* A single photo keeps its own aspect (a portrait receipt must stay readable)
+   but is capped so it can't take over the feed. Tap opens the lightbox. */
+.bbl-photos:not(.multi) .bbl-ph img {
+  height: auto;
+  max-height: 280px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.pay-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fff;
+  color: inherit;
+}
+.pay-card:hover { border-color: var(--brand-mid); }
+.pay-t { font-size: 11px; color: var(--fg-muted); }
+.pay-a { font-size: 15px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.pay-u { font-size: 11px; color: var(--fg-faint); font-family: 'IBM Plex Mono', monospace; }
+.pay-go { font-size: 11px; color: var(--brand); margin-top: 3px; }
+
+/* —— lightbox —— */
+.lb {
+  position: fixed; inset: 0; z-index: 90;
+  background: oklch(0.15 0.01 250 / 0.88);
+  display: grid; place-items: center;
+  padding: 32px;
+  animation: fadeIn 0.15s ease both;
+}
+.lb img { max-width: 92vw; max-height: 88vh; border-radius: 10px; display: block; }
+.lb-nav, .lb-x {
+  position: absolute;
+  border: none;
+  background: oklch(1 0 0 / 0.14);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+}
+.lb-nav { top: 50%; transform: translateY(-50%); width: 44px; height: 44px; font-size: 26px; }
+.lb-nav.l { left: 16px; }
+.lb-nav.r { right: 16px; }
+.lb-x { top: 16px; right: 16px; width: 36px; height: 36px; font-size: 22px; }
+
+@media (max-width: 820px) {
+  /* Two screens, not a split: the list, then the thread.
+     The inbox owns the whole viewport, so .app's 84px bottom padding (which
+     normally clears the fixed .mbar) is dropped here and the column subtracts
+     the topbar and the bar exactly once. Leaving both in place pushed the feed
+     84px down and hid the newest bubble behind the nav. */
+  .app:has(.dlg-split) { padding-bottom: 0; }
+  .dlg-split { grid-template-columns: 1fr; height: calc(100vh - 56px - 84px); }
+  .content:has(.dlg-split) { padding-bottom: 0; }
+  .dlg-split .dlg-pane { display: none; }
+  .dlg-split.has-thread .dlg-list { display: none; }
+  .dlg-split.has-thread .dlg-pane { display: flex; }
+  .dlg-list { border-right: none; }
+  .dlg-back { display: grid; }
+  .dlg-feed .bbl { max-width: 88%; }
+}
+
+/* A photo removed from the apartment since it was sent: show a quiet placeholder
+   rather than the browser's broken-image icon. */
+.bbl-ph.gone img { visibility: hidden; }
+.bbl-ph.gone {
+  background: oklch(0.93 0.006 250);
+  border-radius: 8px;
+  position: relative;
+}
+.bbl-ph.gone::after {
+  content: 'фото недоступно';
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 11px; color: var(--fg-faint);
+}

@@ -322,6 +322,97 @@ export function deleteApartment(token: string, id: string): Promise<{ ok: boolea
   return req(`/apartments/${id}`, token, { method: 'DELETE' });
 }
 
+// --- dialogs (the agent's WhatsApp conversations, mirrored read-only) ---
+
+export type DialogRole = 'guest' | 'agent' | 'system' | 'owner';
+
+export interface DialogMediaItem {
+  url: string;
+  caption?: string;
+}
+
+export interface DialogMessage {
+  id: string;
+  at: string;
+  role: DialogRole;
+  text?: string;
+  media?: {
+    kind: 'photo' | 'album';
+    items: DialogMediaItem[];
+    propertyId?: string;
+  };
+  meta?: {
+    type?: 'pay_link' | 'checkin_pack' | 'key' | 'hold' | 'dialog_split' | 'file';
+    url?: string;
+    amount?: number;
+    kind?: 'deposit' | 'stay';
+    bookingId?: string;
+  };
+}
+
+export interface DialogBookingBrief {
+  id: string;
+  propertyTitle: string;
+  checkIn: string;
+  checkOut: string;
+  status: BookingStatus;
+  paymentPhase?: PaymentPhase;
+}
+
+export interface DialogListItem {
+  chatId: string;
+  guestName?: string;
+  guestPhone: string;
+  lastAt: string;
+  lastPreview: string;
+  unread: boolean;
+  booking?: DialogBookingBrief;
+}
+
+export type DialogFilter = 'all' | 'live' | 'awaiting_pay' | 'today';
+
+export function listDialogs(
+  token: string,
+  opts: { q?: string; filter?: DialogFilter } = {},
+): Promise<{ dialogs: DialogListItem[] }> {
+  const p = new URLSearchParams();
+  if (opts.q) p.set('q', opts.q);
+  if (opts.filter && opts.filter !== 'all') p.set('filter', opts.filter);
+  const qs = p.toString();
+  return req(`/dialogs${qs ? `?${qs}` : ''}`, token);
+}
+
+export function getDialog(
+  token: string,
+  chatId: string,
+): Promise<{
+  chat: { chatId: string; guestName?: string; guestPhone: string; booking?: DialogBookingBrief };
+  messages: DialogMessage[];
+}> {
+  return req(`/dialogs/${encodeURIComponent(chatId)}`, token);
+}
+
+export function markDialogSeen(token: string, chatId: string): Promise<{ ok: boolean }> {
+  return req(`/dialogs/${encodeURIComponent(chatId)}/seen`, token, { method: 'POST' });
+}
+
+/**
+ * Renderable URL for a message's image.
+ *
+ * Apartment photos are already public absolute URLs. Inbound guest media
+ * (receipts, screenshots) is private, served through the authenticated admin
+ * API — and since `<img>` cannot send an Authorization header, the token rides
+ * as a query param on that route only.
+ */
+export function dialogMediaSrc(url: string, token: string): string {
+  // Private guest media: authenticated route, token as a query param because
+  // <img> cannot send an Authorization header.
+  if (url.startsWith('/dialogs/')) return `${BASE}${url}?token=${encodeURIComponent(token)}`;
+  // Apartment photos are public. Absolute when PUBLIC_URL is configured on the
+  // server; relative otherwise, in which case the cabinet's own proxy serves them.
+  return url;
+}
+
 // --- photos (agent sends these via WhatsApp) ---
 
 export interface ApartmentPhoto {
