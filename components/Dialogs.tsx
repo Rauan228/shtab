@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  CHANNEL_LABEL,
   listDialogs,
   todayIso,
+  type Channel,
   type DialogFilter,
   type DialogListItem,
 } from '../lib/api';
@@ -80,21 +82,40 @@ export function Dialogs({ chatId }: { chatId?: string }) {
 
   const [items, setItems] = useState<DialogListItem[] | null>(null);
   const [filter, setFilter] = useState<DialogFilter>('all');
+  const [channel, setChannel] = useState<Channel | null>(null);
   const [q, setQ] = useState('');
   const [err, setErr] = useState('');
+  /**
+   * Which channels this owner actually uses. The channel row only appears once
+   * both are in play — a WhatsApp-only pilot shouldn't see a filter with one
+   * option, or badges on every single row.
+   */
+  const [seenChannels, setSeenChannels] = useState<Set<Channel>>(new Set());
 
   // Keep the latest query in a ref so the poll interval never restarts (and the
   // list never flashes) just because the owner typed a character.
-  const params = useRef({ q, filter });
-  params.current = { q, filter };
+  const params = useRef({ q, filter, channel });
+  params.current = { q, filter, channel };
 
   const load = useCallback(
     async (quiet: boolean) => {
       if (!token) return;
       try {
-        const { q: query, filter: f } = params.current;
-        const res = await listDialogs(token, { q: query, filter: f });
+        const { q: query, filter: f, channel: ch } = params.current;
+        const res = await listDialogs(token, {
+          q: query,
+          filter: f,
+          ...(ch ? { channel: ch } : {}),
+        });
         setItems(res.dialogs);
+        // Remember channels ever seen, so filtering to one doesn't hide the row
+        // that let you filter in the first place.
+        setSeenChannels((prev) => {
+          const next = new Set(prev);
+          for (const d of res.dialogs) next.add(d.channel);
+          if (ch) next.add(ch);
+          return next.size === prev.size ? prev : next;
+        });
         setErr('');
       } catch (e) {
         // A failed background tick must not blank a list the owner is reading.
@@ -151,6 +172,32 @@ export function Dialogs({ chatId }: { chatId?: string }) {
               </button>
             ))}
           </div>
+          {/* Only worth showing once the owner actually has both messengers. */}
+          {seenChannels.size > 1 && (
+            <div className="dlg-filters">
+              <button
+                type="button"
+                className={`fbtn${channel === null ? ' on' : ''}`}
+                onClick={() => setChannel(null)}
+              >
+                Все каналы
+              </button>
+              <button
+                type="button"
+                className={`fbtn${channel === 'whatsapp' ? ' on' : ''}`}
+                onClick={() => setChannel('whatsapp')}
+              >
+                WhatsApp
+              </button>
+              <button
+                type="button"
+                className={`fbtn${channel === 'telegram' ? ' on' : ''}`}
+                onClick={() => setChannel('telegram')}
+              >
+                Telegram
+              </button>
+            </div>
+          )}
         </div>
 
         {err && (
@@ -197,7 +244,16 @@ export function Dialogs({ chatId }: { chatId?: string }) {
                       <span className="dlg-prev trunc">{d.lastPreview || '—'}</span>
                       {d.unread ? <span className="dlg-dot" aria-label="новое" /> : null}
                     </span>
-                    {chip ? <span className="chip dlg-chip">{chip}</span> : null}
+                    {(seenChannels.size > 1 || chip) && (
+                      <span className="dlg-tags">
+                        {seenChannels.size > 1 ? (
+                          <span className={`ch-chip ch-${d.channel}`}>
+                            {CHANNEL_LABEL[d.channel]}
+                          </span>
+                        ) : null}
+                        {chip ? <span className="chip">{chip}</span> : null}
+                      </span>
+                    )}
                   </span>
                 </button>
               );

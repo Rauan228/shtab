@@ -7,6 +7,7 @@ import {
   formatKzt,
   getDialog,
   markDialogSeen,
+  type Channel,
   type DialogListItem,
   type DialogMessage,
 } from '../lib/api';
@@ -81,7 +82,9 @@ export function DialogThread({
 
   const [messages, setMessages] = useState<DialogMessage[] | null>(null);
   const [chat, setChat] = useState<{
+    channel?: Channel;
     guestName?: string;
+    guestUsername?: string;
     guestPhone: string;
     booking?: DialogListItem['booking'];
   } | null>(preloaded ? { ...preloaded } : null);
@@ -172,6 +175,9 @@ export function DialogThread({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="dlg-head-n trunc">{title}</div>
           <div className="dlg-head-s mono trunc">
+            {/* On Telegram guestPhone is really the @username — we never learn
+                the number, so labelling the channel keeps it honest. */}
+            {chat?.channel === 'telegram' ? 'TG · ' : ''}
             {chat?.guestPhone ?? ''}
             {booking ? ` · ${formatDateRu(booking.checkIn)} – ${formatDateRu(booking.checkOut)}` : ''}
           </div>
