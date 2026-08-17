@@ -222,7 +222,7 @@ export function ObjectDetail({ id }: { id: string }) {
                 ['minNights', 'Мин. ночей', rules.minNights],
                 ['baseGuests', 'Гостей в цене', rules.baseGuests],
                 ['extraGuestFee', 'Доп. гость, ₸/ночь', rules.extraGuestFee],
-                ['cleaningFee', 'Уборка, ₸', rules.cleaningFee],
+                ['cleaningFee', 'Уборка, ₸ (себестоимость)', rules.cleaningFee],
                 ['deposit', 'Депозит, ₸', rules.deposit],
                 ['weekendPrice', 'Пт–Сб, ₸/ночь', rules.weekendPrice ?? 0],
               ] as const
@@ -240,6 +240,21 @@ export function ObjectDetail({ id }: { id: string }) {
                 />
               </label>
             ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid oklch(0.95 0.004 250)', paddingTop: 12 }}>
+            <button
+              type="button"
+              className={`toggle${rules.cleaningChargedToGuest ? ' on' : ''}`}
+              onClick={() => setR({ cleaningChargedToGuest: !rules.cleaningChargedToGuest })}
+            >
+              <i />
+            </button>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 500 }}>Гость платит за уборку</div>
+              <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>
+                Выкл — сумма уборки только вам, бот не включает её в цену. Вкл — уборка в счёте гостя отдельной строкой.
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid oklch(0.95 0.004 250)', paddingTop: 12 }}>
             <button

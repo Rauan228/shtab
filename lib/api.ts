@@ -41,6 +41,7 @@ export interface PropertyRules {
   baseGuests: number;
   extraGuestFee: number;
   cleaningFee: number;
+  cleaningChargedToGuest?: boolean;
   deposit: number;
   weekendPrice?: number;
   cancellationPolicy?: string;
@@ -107,6 +108,8 @@ export interface Quote {
     cleaningFee: number;
     extraGuestTotal: number;
     deposit: number;
+    ownerCleaningFee?: number;
+    cleaningChargedToGuest?: boolean;
   };
 }
 
@@ -265,45 +268,72 @@ export function saveDateRates(
   });
 }
 
-export interface ReportDay {
-  iso: string;
-  occupied: number;
-  sellable: number;
-  revenue: number;
-  arrivals: number;
-  departures: number;
-}
+export const REPORT_TYPES = [
+  { id: 'income', title: 'Доход', hint: 'Проживание и уборка гостя, факт и будущие брони' },
+  { id: 'payments', title: 'Платежи', hint: 'Что уже должно быть оплачено по фазе брони' },
+  { id: 'by_property', title: 'Доход по квартирам', hint: 'Выручка разрезом объекта' },
+  { id: 'kpi', title: 'Доход + ADR + загрузка', hint: 'Occupancy, ADR, RevPAR за период' },
+  { id: 'pickup', title: 'Pick up', hint: 'Как быстро появляются новые брони' },
+  { id: 'history', title: 'История по месяцам', hint: 'Загрузка / ADR / RevPAR помесячно' },
+  { id: 'rooms', title: 'Загрузка по квартирам', hint: 'Какой объект сколько ночей продал' },
+  { id: 'manager', title: 'Сводка менеджера', hint: 'Сегодня и накопительный итог месяца' },
+  { id: 'window', title: 'Окно бронирования', hint: 'За сколько дней до заезда бронируют' },
+  { id: 'cancels', title: 'Аннуляции', hint: 'Отмены и не заехавшие' },
+] as const;
 
-export interface ReportPayload {
+export type ReportTypeId = (typeof REPORT_TYPES)[number]['id'];
+
+export interface TypedReport {
+  type: ReportTypeId;
+  title: string;
   from: string;
   to: string;
-  occupancyPct: number;
-  revenue: number;
-  adr: number;
-  revpar: number;
-  bookings: number;
-  cancelled: number;
-  noShow: number;
-  avgCheck: number;
-  avgNights: number;
-  sources: { id: 'agent' | 'manual'; label: string; count: number; revenue: number }[];
-  days: ReportDay[];
-  rows: {
-    id: string;
-    propertyTitle: string;
-    guestName: string;
-    checkIn: string;
-    checkOut: string;
-    nights: number;
-    totalPrice: number;
-    status: string;
-    source: string;
-    kind: 'stay' | 'cancel' | 'noshow';
-  }[];
+  kpis: { l: string; v: string }[];
+  series: { iso: string; a: number; b?: number }[];
+  rows: string[][];
+  note?: string;
 }
 
-export function getReport(token: string, from: string, to: string): Promise<{ report: ReportPayload }> {
-  return req(`/reports?from=${from}&to=${to}`, token);
+export interface ReportRunMeta {
+  id: string;
+  type: string;
+  title: string;
+  from: string;
+  to: string;
+  createdAt: string;
+}
+
+export function getReport(
+  token: string,
+  type: ReportTypeId,
+  from: string,
+  to: string,
+): Promise<{ report: TypedReport }> {
+  return req(`/reports?type=${type}&from=${from}&to=${to}`, token);
+}
+
+export function saveReportRun(
+  token: string,
+  type: ReportTypeId,
+  from: string,
+  to: string,
+): Promise<{ run: ReportRunMeta; report: TypedReport }> {
+  return req(`/reports/runs?type=${type}&from=${from}&to=${to}`, token, { method: 'POST' });
+}
+
+export function listReportRuns(token: string): Promise<{ runs: ReportRunMeta[] }> {
+  return req('/reports/runs', token);
+}
+
+export function getReportRun(
+  token: string,
+  id: string,
+): Promise<{ run: ReportRunMeta & { payload: TypedReport } }> {
+  return req(`/reports/runs/${id}`, token);
+}
+
+export function reportRunCsvUrl(id: string): string {
+  return `${BASE}/reports/runs/${id}.csv`;
 }
 
 export function getQuote(

@@ -454,10 +454,17 @@ export function Drawer() {
                         <span style={{ color: 'oklch(0.5 0.012 250)' }}>Проживание</span>
                         <span className="mono">{quote.breakdown.nightsTotal.toLocaleString('ru-RU')} ₸</span>
                       </div>
-                      <div className="q-row">
-                        <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка</span>
-                        <span className="mono">{quote.breakdown.cleaningFee.toLocaleString('ru-RU')} ₸</span>
-                      </div>
+                      {quote.breakdown.cleaningFee > 0 ? (
+                        <div className="q-row">
+                          <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка (гость)</span>
+                          <span className="mono">{quote.breakdown.cleaningFee.toLocaleString('ru-RU')} ₸</span>
+                        </div>
+                      ) : quote.breakdown.ownerCleaningFee ? (
+                        <div className="q-row">
+                          <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка (не в счёте гостя)</span>
+                          <span className="mono">{quote.breakdown.ownerCleaningFee.toLocaleString('ru-RU')} ₸</span>
+                        </div>
+                      ) : null}
                     </>
                   )}
                   <div className="q-row">
