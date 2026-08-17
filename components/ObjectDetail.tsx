@@ -152,7 +152,7 @@ export function ObjectDetail({ id }: { id: string }) {
       <div className="detail-hero">
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 20, fontWeight: 600 }}>{property.title}</div>
-          <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 3 }}>{property.address}</div>
+          <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 3 }}>{property.address}</div>
         </div>
         <div className="prog">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 6 }}>
@@ -241,7 +241,7 @@ export function ObjectDetail({ id }: { id: string }) {
               </label>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid oklch(0.95 0.004 250)', paddingTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
             <button
               type="button"
               className={`toggle${rules.cleaningChargedToGuest ? ' on' : ''}`}
@@ -251,12 +251,12 @@ export function ObjectDetail({ id }: { id: string }) {
             </button>
             <div>
               <div style={{ fontSize: 12, fontWeight: 500 }}>Гость платит за уборку</div>
-              <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>
+              <div style={{ fontSize: 11, color: 'var(--fg-faint)' }}>
                 Выкл — сумма уборки только вам, бот не включает её в цену. Вкл — уборка в счёте гостя отдельной строкой.
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid oklch(0.95 0.004 250)', paddingTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
             <button
               type="button"
               className={`toggle${rules.autoBookingEnabled ? ' on' : ''}`}
@@ -266,7 +266,7 @@ export function ObjectDetail({ id }: { id: string }) {
             </button>
             <div>
               <div style={{ fontSize: 12, fontWeight: 500 }}>Бот бронирует сам</div>
-              <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>Если даты свободны и правила сходятся</div>
+              <div style={{ fontSize: 11, color: 'var(--fg-faint)' }}>Если даты свободны и правила сходятся</div>
             </div>
           </div>
         </div>
@@ -276,7 +276,7 @@ export function ObjectDetail({ id }: { id: string }) {
         <div className="sec-h">
           <span className="sec-n">02б</span>Цены по датам
         </div>
-        <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.45 }}>
           Праздники, Наурыз, Новый год: своя цена, минимум ночей или закрыть продажу. Выезд — день после последней ночи.
         </div>
         {rates.map((r, i) => (
@@ -423,7 +423,7 @@ export function ObjectDetail({ id }: { id: string }) {
         <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="sec-h">
             <span className="sec-n">04</span>Фото
-            <span style={{ marginLeft: 'auto', fontSize: 10, color: 'oklch(0.6 0.01 250)', fontWeight: 400 }}>
+            <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--fg-faint)', fontWeight: 400 }}>
               {photos.length} · первое уходит гостю
             </span>
           </div>
@@ -455,7 +455,7 @@ export function ObjectDetail({ id }: { id: string }) {
             </label>
             )}
           </div>
-          <div style={{ fontSize: 11, color: 'oklch(0.58 0.012 250)' }}>JPG/PNG. Эти же файлы бот шлёт в WhatsApp.</div>
+          <div style={{ fontSize: 11, color: 'var(--fg-faint)' }}>JPG/PNG. Эти же файлы бот шлёт в WhatsApp.</div>
         </div>
       </div>
 

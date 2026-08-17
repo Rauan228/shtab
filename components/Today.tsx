@@ -375,7 +375,7 @@ export function Today() {
           </button>
           {aptsOpen &&
             (stats.occByApt.length === 0 ? (
-              <div className="op-row" style={{ color: 'oklch(0.55 0.012 250)', fontSize: 13 }}>
+              <div className="op-row" style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
                 {loading ? 'Загрузка…' : 'Нет объектов'}
               </div>
             ) : (
@@ -407,7 +407,7 @@ export function Today() {
           <div className="card" style={{ overflow: 'hidden' }}>
             <div className="card-h">Заезды и выезды</div>
             {stats.ops.length === 0 ? (
-              <div className="op-row" style={{ color: 'oklch(0.55 0.012 250)', fontSize: 13 }}>
+              <div className="op-row" style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
                 На период пусто
               </div>
             ) : (
@@ -432,7 +432,7 @@ export function Today() {
                     <div className="trunc" style={{ fontSize: 13, fontWeight: 500 }}>
                       {t.obj}
                     </div>
-                    <div style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)' }}>
+                    <div style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
                       {t.guest}
                       {period === 'week' ? ` · ${formatDateRu(t.day)}` : ''}
                     </div>
@@ -449,7 +449,7 @@ export function Today() {
             <div className="card" style={{ overflow: 'hidden' }}>
               <div className="card-h">Ждут подтверждения</div>
               {stats.pending.length === 0 ? (
-                <div className="op-row" style={{ color: 'oklch(0.55 0.012 250)', fontSize: 13 }}>
+                <div className="op-row" style={{ color: 'var(--fg-muted)', fontSize: 13 }}>
                   Нет броней в ожидании оплаты
                 </div>
               ) : (
@@ -460,7 +460,7 @@ export function Today() {
                       <div className="trunc" style={{ fontSize: 13, fontWeight: 500 }}>
                         {titles[b.propertyId]} · {b.guestName}
                       </div>
-                      <div className="mono" style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)' }}>
+                      <div className="mono" style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
                         {formatDateRu(b.begin)} → {formatDateRu(b.end)} · {waitingPayHint(b.paymentPhase)}
                       </div>
                     </div>
@@ -495,7 +495,7 @@ export function Today() {
                   <div style={{ fontSize: 13, fontWeight: 600 }}>
                     {notReady} {notReady === 1 ? 'объект не готов' : 'объекта не готовы'} к продаже
                   </div>
-                  <div style={{ fontSize: 12, color: 'oklch(0.45 0.03 80)', marginTop: 3, lineHeight: 1.45 }}>
+                  <div style={{ fontSize: 12, color: 'var(--warn-fg)', marginTop: 3, lineHeight: 1.45 }}>
                     Бот их слабо продаёт: нет цены или инструкций заезда.
                   </div>
                   <button className="btn btn-xs" style={{ marginTop: 10 }} onClick={() => router.push(href('/objects'))}>

@@ -427,9 +427,6 @@ export function DialogThread({
           <div className="scrim" onClick={() => !reportBusy && setReport(null)} />
           <div className="modal modal-lg">
             <div style={{ fontSize: 15, fontWeight: 600 }}>Сообщить об ошибке</div>
-            <div style={{ fontSize: 13, color: 'oklch(0.5 0.012 250)', marginTop: 6, lineHeight: 1.45 }}>
-              Уйдёт в лог-группу AmanAI. Гость это не увидит.
-            </div>
             <div className="rpt-quote">{report.text || '— пустое сообщение —'}</div>
             <label className="field" style={{ marginTop: 12 }}>
               <span>В чём ошибка</span>
@@ -472,7 +469,6 @@ export function DialogThread({
                   })
                     .then(() => {
                       setReport(null);
-                      flash('Отправили в лог-группу');
                     })
                     .catch((e) => setReportErr(e instanceof Error ? e.message : 'Не отправилось'))
                     .finally(() => setReportBusy(false));

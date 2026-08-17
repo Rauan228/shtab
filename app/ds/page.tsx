@@ -1,12 +1,5 @@
-'use client';
-
-import { DesignSystem } from '../../components/DesignSystem';
-import { Guard } from '../../components/Guard';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return (
-    <Guard>
-      <DesignSystem />
-    </Guard>
-  );
+  redirect('/today');
 }

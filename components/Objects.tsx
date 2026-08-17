@@ -12,6 +12,7 @@ import {
 } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
+import { GuestPay } from './GuestPay';
 
 export function Objects() {
   const { token } = useAuth();
@@ -71,6 +72,10 @@ export function Objects() {
         )}
       </div>
 
+      <div style={{ marginTop: 14 }}>
+        <GuestPay />
+      </div>
+
       {err && (
         <div className="err-box" style={{ marginTop: 12 }}>
           <span className="err-dot" />
@@ -83,7 +88,7 @@ export function Objects() {
       ) : list.length === 0 ? (
         <div className="empty" style={{ marginTop: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>Здесь пока пусто</div>
-          <div style={{ fontSize: 13, color: 'oklch(0.55 0.012 250)', maxWidth: 320 }}>
+          <div style={{ fontSize: 13, color: 'var(--fg-muted)', maxWidth: 320 }}>
             {tab === 'archived'
               ? 'Скрытые объекты появятся здесь.'
               : 'Добавьте первую квартиру — бот начнёт отвечать по ней после цены, правил и фото.'}
@@ -109,16 +114,16 @@ export function Objects() {
                       {o.ready ? 'готов к продаже' : 'не готов'}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)', marginTop: 3 }}>{o.address || 'Адрес не указан'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 3 }}>{o.address || 'Адрес не указан'}</div>
                   <div className="mono" style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12 }}>
                     <span style={{ fontWeight: 500 }}>{o.basePrice > 0 ? formatKzt(o.basePrice) : 'нет цены'}</span>
-                    <span style={{ color: 'oklch(0.58 0.01 250)' }}>до {o.maxGuests} гостей</span>
+                    <span style={{ color: 'var(--fg-faint)' }}>до {o.maxGuests} гостей</span>
                   </div>
                 </div>
               </div>
               <div
                 style={{
-                  borderTop: '1px solid oklch(0.95 0.004 250)',
+                  borderTop: '1px solid var(--line)',
                   paddingTop: 10,
                   display: 'flex',
                   gap: 8,

@@ -243,7 +243,7 @@ export function Reports() {
         <div className="card" style={{ overflow: 'hidden' }}>
           <div className="card-h">История выгрузок</div>
           {runs.length === 0 ? (
-            <div className="op-row" style={{ fontSize: 13, color: 'oklch(0.55 0.012 250)' }}>
+            <div className="op-row" style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
               Пока пусто. Посчитайте отчёт и нажмите «В историю» — через месяц он останется здесь.
             </div>
           ) : (
@@ -253,7 +253,7 @@ export function Reports() {
                   <div className="trunc" style={{ fontSize: 13, fontWeight: 500 }}>
                     {r.title}
                   </div>
-                  <div className="mono" style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)' }}>
+                  <div className="mono" style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
                     {formatDateRu(r.from)} — {formatDateRu(addDays(r.to, -1))} ·{' '}
                     {new Date(r.createdAt).toLocaleString('ru-RU')}
                   </div>

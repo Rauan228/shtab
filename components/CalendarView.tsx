@@ -340,7 +340,7 @@ export function CalendarView() {
       {properties.length === 0 && !err ? (
         <div className="empty" style={{ marginTop: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>Пока нет объектов</div>
-          <div style={{ fontSize: 13, color: 'oklch(0.55 0.012 250)', maxWidth: 340 }}>
+          <div style={{ fontSize: 13, color: 'var(--fg-muted)', maxWidth: 340 }}>
             Добавьте квартиру в разделе «Объекты» — бот начнёт продавать её в WhatsApp.
           </div>
         </div>
@@ -356,7 +356,7 @@ export function CalendarView() {
                       <div className="trunc" style={{ fontSize: 13, fontWeight: 500 }}>
                         {p.title}
                       </div>
-                      <div className="trunc" style={{ fontSize: 10, color: 'oklch(0.6 0.01 250)' }}>
+                      <div className="trunc" style={{ fontSize: 10, color: 'var(--fg-faint)' }}>
                         {p.basePrice > 0 ? `${p.basePrice.toLocaleString('ru-RU')} ₸` : 'нет цены'} · до {p.maxGuests}
                       </div>
                     </div>
@@ -459,7 +459,7 @@ export function CalendarView() {
                 </div>
               );
             })}
-            <div style={{ marginLeft: 'auto', fontSize: 11, color: 'oklch(0.6 0.01 250)' }}>
+            <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--fg-faint)' }}>
               Потяните мышью диапазон — или кликните день и поправьте даты в форме.
             </div>
           </div>

@@ -77,13 +77,13 @@ export function Plan() {
         <div>
           <div className="kicker">Подписка · {periodTitle(data.period.label)}</div>
           <div style={{ fontSize: 22, fontWeight: 600, marginTop: 6 }}>{data.plan.name}</div>
-          <div style={{ fontSize: 13, color: 'oklch(0.5 0.012 250)', marginTop: 4 }}>{data.plan.forWhom}</div>
+          <div style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 4 }}>{data.plan.forWhom}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
             {money(data.plan.priceKzt)}
           </div>
-          <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)' }}>/ мес</div>
+          <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>/ мес</div>
           <div className={`badge ${data.org.status === 'active' ? 'badge-ok' : 'badge-warn'}`} style={{ marginTop: 8 }}>
             {data.org.status === 'active' ? 'активна' : data.org.status}
           </div>
@@ -93,18 +93,18 @@ export function Plan() {
       <div className="g2">
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
-          <div style={{ fontSize: 12, color: 'oklch(0.5 0.012 250)', margin: '6px 0 10px' }}>
+          <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
             Квартиры в продаже. Скрытые не считаются.
           </div>
           <Meter used={p.used} max={p.max} />
         </div>
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Диалоги</div>
-          <div style={{ fontSize: 12, color: 'oklch(0.5 0.012 250)', margin: '6px 0 10px' }}>
+          <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
             Осталось {dialogLeft}. Новый слот — если гость молчал {data.idleDays} дней.
           </div>
           <Meter used={d.used} max={d.max} />
-          <div style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)', marginTop: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 8 }}>
             В тарифе {d.included}
             {d.extra > 0 ? ` + докуплено ${d.extra}` : ''}
           </div>
@@ -130,7 +130,7 @@ export function Plan() {
 
       <div className="card card-pad">
         <div style={{ fontSize: 13, fontWeight: 600 }}>Докупить диалоги</div>
-        <div style={{ fontSize: 12, color: 'oklch(0.5 0.012 250)', marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
           Пакет действует до конца месяца. Сверх лимита — {money(data.overagePerDialogKzt)} за диалог.
           Оплата пока вручную: напишите нам, зачислим в этот кабинет.
         </div>
@@ -141,7 +141,7 @@ export function Plan() {
               <div className="mono" style={{ marginTop: 6, fontSize: 16 }}>
                 {money(pack.priceKzt)}
               </div>
-              <div style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)', marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 4 }}>
                 {Math.round(pack.priceKzt / pack.dialogs)} ₸ / диалог
               </div>
             </div>

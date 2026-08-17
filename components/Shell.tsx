@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
 import { addDays, cabinetCalendarWindow, getCalendar, listDialogs, todayIso } from '../lib/api';
+import { useTheme } from '../lib/theme';
 import { useUi } from '../lib/ui';
 import { BrandMark, Wordmark } from './BrandMark';
 import { Confirm, Drawer } from './Drawer';
@@ -17,8 +18,9 @@ import {
   LayoutIcon,
   LogoutIcon,
   MenuIcon,
-  PaletteIcon,
+  MoonIcon,
   SettingsIcon,
+  SunIcon,
 } from './icons';
 
 /** Russian plural: 1 диалог, 2 диалога, 5 диалогов. */
@@ -35,6 +37,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { token, logout } = useAuth();
   const { toast, openDrawer, readOnly, navPrefix, href, reloadTick } = useUi();
+  const { theme, toggleTheme } = useTheme();
   const logical =
     navPrefix && path.startsWith(navPrefix) ? path.slice(navPrefix.length) || '/calendar' : path;
   const [pending, setPending] = useState(0);
@@ -86,7 +89,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const isSet = logical.startsWith('/settings');
   const isPlan = logical.startsWith('/plan');
   const isRep = logical.startsWith('/reports');
-  const isDs = logical.startsWith('/ds');
   const isCard = /\/(objects|apartments)\/.+/.test(logical);
 
   const title = isToday
@@ -104,10 +106,8 @@ export function Shell({ children }: { children: ReactNode }) {
           : isPlan
             ? 'Тариф'
             : isSet
-              ? 'Настройки'
-              : isDs
-                ? 'Дизайн-система'
-                : 'Кабинет';
+              ? 'Ещё'
+              : 'Кабинет';
 
   const pageMeta = isToday
     ? `${todayIso()} · Asia/Almaty`
@@ -122,7 +122,7 @@ export function Shell({ children }: { children: ReactNode }) {
       : isCard
         ? 'данные, по которым отвечает бот'
         : isObj
-          ? 'PMS агента'
+          ? 'квартиры и цены'
           : isPlan
             ? 'лимиты и подписка'
             : '';
@@ -158,8 +158,6 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <div className="nav-sep" />
         <div className="nav">
-          {nav('/settings', <SettingsIcon />, 'Настройки', isSet)}
-          {!readOnly && nav('/ds', <PaletteIcon />, 'Дизайн-система', isDs)}
           <button
             className="nav-btn"
             onClick={() => {
@@ -179,12 +177,11 @@ export function Shell({ children }: { children: ReactNode }) {
             <span>{readOnly ? 'Закрыть просмотр' : 'Выйти'}</span>
           </button>
         </div>
-        <div className="wa-box">
-          <div className="t">
-            <span className="pulse" />
-            Агент на VPS
-          </div>
-          <div className="s">Один PMS: кабинет и WhatsApp читают одни квартиры</div>
+        <div className="theme-box">
+          <button type="button" className="theme-btn" onClick={toggleTheme}>
+            <span className="nav-ic">{theme === 'dark' ? <SunIcon /> : <MoonIcon />}</span>
+            <span>{theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}</span>
+          </button>
         </div>
       </aside>
 
@@ -276,7 +273,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <Confirm />
       {toast ? (
         <div className="toast">
-          <span style={{ color: 'oklch(0.8 0.14 155)' }}>✓</span>
+          <span className="toast-ok">✓</span>
           {toast}
         </div>
       ) : null}

@@ -204,7 +204,7 @@ export function Drawer() {
         <div className="drawer-h">
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>{title}</div>
-            <div className="mono" style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', marginTop: 3 }}>
+            <div className="mono" style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 3 }}>
               {checkIn && checkOut ? `${formatDateRu(checkIn)} → ${formatDateRu(checkOut)}` : 'укажите даты'}
             </div>
           </div>
@@ -278,12 +278,12 @@ export function Drawer() {
               </label>
               <div
                 style={{
-                  background: 'oklch(0.96 0.004 250)',
-                  border: '1px solid oklch(0.92 0.006 250)',
+                  background: 'var(--soft)',
+                  border: '1px solid var(--border)',
                   borderRadius: 9,
                   padding: '11px 12px',
                   fontSize: 12,
-                  color: 'oklch(0.45 0.012 250)',
+                  color: 'var(--fg-muted)',
                   lineHeight: 1.5,
                 }}
               >
@@ -326,7 +326,7 @@ export function Drawer() {
               {isEdit && pay && (
                 <div
                   style={{
-                    border: '1px solid oklch(0.9 0.006 250)',
+                    border: '1px solid var(--border)',
                     borderRadius: 9,
                     padding: '12px',
                     display: 'flex',
@@ -335,7 +335,7 @@ export function Drawer() {
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 600 }}>Оплата Kaspi</div>
-                  <div style={{ fontSize: 12, color: 'oklch(0.45 0.012 250)', lineHeight: 1.45 }}>
+                  <div style={{ fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.45 }}>
                     Сейчас:{' '}
                     {pay.paymentPhase === 'deposit_claimed'
                       ? 'гость сказал, что перевёл депозит — проверьте Kaspi'
@@ -429,9 +429,9 @@ export function Drawer() {
                             height: 32,
                             borderRadius: 8,
                             fontSize: 12,
-                            border: `1px solid ${on ? c.bd : 'oklch(0.9 0.006 250)'}`,
-                            background: on ? c.bg : '#fff',
-                            color: on ? c.fg : 'oklch(0.45 0.012 250)',
+                            border: `1px solid ${on ? c.bd : 'var(--border)'}`,
+                            background: on ? c.bg : 'var(--panel)',
+                            color: on ? c.fg : 'var(--fg-muted)',
                             fontWeight: on ? 500 : 400,
                           }}
                         >
@@ -445,23 +445,23 @@ export function Drawer() {
               {quote && (
                 <div className="quote">
                   <div className="q-row">
-                    <span style={{ color: 'oklch(0.5 0.012 250)' }}>Ночи</span>
+                    <span style={{ color: 'var(--fg-muted)' }}>Ночи</span>
                     <span className="mono">{quote.nights}</span>
                   </div>
                   {quote.breakdown && (
                     <>
                       <div className="q-row">
-                        <span style={{ color: 'oklch(0.5 0.012 250)' }}>Проживание</span>
+                        <span style={{ color: 'var(--fg-muted)' }}>Проживание</span>
                         <span className="mono">{quote.breakdown.nightsTotal.toLocaleString('ru-RU')} ₸</span>
                       </div>
                       {quote.breakdown.cleaningFee > 0 ? (
                         <div className="q-row">
-                          <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка (гость)</span>
+                          <span style={{ color: 'var(--fg-muted)' }}>Уборка (гость)</span>
                           <span className="mono">{quote.breakdown.cleaningFee.toLocaleString('ru-RU')} ₸</span>
                         </div>
                       ) : quote.breakdown.ownerCleaningFee ? (
                         <div className="q-row">
-                          <span style={{ color: 'oklch(0.5 0.012 250)' }}>Уборка (не в счёте гостя)</span>
+                          <span style={{ color: 'var(--fg-muted)' }}>Уборка (не в счёте гостя)</span>
                           <span className="mono">{quote.breakdown.ownerCleaningFee.toLocaleString('ru-RU')} ₸</span>
                         </div>
                       ) : null}
@@ -474,7 +474,7 @@ export function Drawer() {
                     </span>
                   </div>
                   {!quote.available && (
-                    <div style={{ fontSize: 12, color: 'oklch(0.52 0.16 25)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--danger-fg)' }}>
                       {quote.reason === 'occupied' ? 'Даты заняты' : quote.reason ?? 'Недоступно'}
                     </div>
                   )}
@@ -534,7 +534,7 @@ export function Confirm() {
       <div className="scrim" onClick={closeConfirm} />
       <div className="modal">
         <div style={{ fontSize: 15, fontWeight: 600 }}>{confirm.title}</div>
-        <div style={{ fontSize: 13, color: 'oklch(0.5 0.012 250)', marginTop: 7, lineHeight: 1.5 }}>{confirm.text}</div>
+        <div style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 7, lineHeight: 1.5 }}>{confirm.text}</div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 18 }}>
           <button className="btn" onClick={closeConfirm}>
             Не надо
