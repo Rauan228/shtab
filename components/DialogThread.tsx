@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
 import { dialogTitle } from './Dialogs';
+import { AlertIcon } from './icons';
 
 const POLL_MS = 4000;
 
@@ -268,16 +269,7 @@ export function DialogThread({
                             setReportErr('');
                           }}
                         >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                            <path
-                              d="M8 1.6 14.6 13.2H1.4L8 1.6Z"
-                              stroke="currentColor"
-                              strokeWidth="1.4"
-                              strokeLinejoin="round"
-                            />
-                            <path d="M8 6.2v3.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                            <circle cx="8" cy="11.3" r="0.7" fill="currentColor" />
-                          </svg>
+                          <AlertIcon size={15} />
                         </button>
                       ) : null}
                     <div

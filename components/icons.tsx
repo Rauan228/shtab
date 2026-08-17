@@ -138,3 +138,58 @@ export const LinkIcon = ({ size = 16, className }: Props) => (
     <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.8-1.8" />
   </svg>
 );
+
+export const LayoutIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <rect x="3" y="3" width="7" height="9" rx="1" />
+    <rect x="14" y="3" width="7" height="5" rx="1" />
+    <rect x="14" y="12" width="7" height="9" rx="1" />
+    <rect x="3" y="16" width="7" height="5" rx="1" />
+  </svg>
+);
+
+export const ChatIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+  </svg>
+);
+
+export const BuildingIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18" />
+    <path d="M6 12H4a2 2 0 0 0-2 2v8h20v-8a2 2 0 0 0-2-2h-2" />
+    <path d="M10 6h4M10 10h4M10 14h4M10 18h4" />
+  </svg>
+);
+
+export const CardIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M2 10h20" />
+  </svg>
+);
+
+export const SettingsIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+  </svg>
+);
+
+export const PaletteIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 22a8 8 0 1 1 8-8c0 1.7-1.3 2.5-2.5 2.5S15 15.7 15 14V13" />
+    <circle cx="7.5" cy="10.5" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="10.5" cy="7.5" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="13.5" cy="7.5" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="16.5" cy="10.5" r="0.8" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const UsersIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);

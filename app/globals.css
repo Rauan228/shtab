@@ -309,7 +309,17 @@ a:hover { color: var(--brand-hover); }
 }
 .nav-btn:hover { background: oklch(0.97 0.004 250); }
 .nav-btn.on { background: var(--brand-soft); color: var(--brand-deep); font-weight: 500; }
-.nav-ic { width: 16px; text-align: center; font-size: 13px; opacity: 0.85; }
+.nav-ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.88;
+}
+.nav-btn.on .nav-ic { opacity: 1; }
 .nav-count {
   margin-left: auto;
   font-family: 'IBM Plex Mono', monospace;
@@ -635,7 +645,13 @@ a:hover { color: var(--brand-hover); }
   font-size: 10px; font-weight: 500; text-decoration: none;
 }
 .mbar a.on { color: var(--brand); }
-.mbar .ic { font-size: 15px; line-height: 1; }
+.mbar .ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  color: inherit;
+}
 .fab {
   position: absolute; right: 16px; top: -58px;
   width: 52px; height: 52px; border-radius: 50%;

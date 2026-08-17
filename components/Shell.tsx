@@ -8,6 +8,16 @@ import { addDays, getCalendar, listDialogs, todayIso } from '../lib/api';
 import { useUi } from '../lib/ui';
 import { BrandMark, Wordmark } from './BrandMark';
 import { Confirm, Drawer } from './Drawer';
+import {
+  BuildingIcon,
+  CalendarIcon,
+  CardIcon,
+  ChatIcon,
+  LayoutIcon,
+  LogoutIcon,
+  PaletteIcon,
+  SettingsIcon,
+} from './icons';
 
 /** Russian plural: 1 диалог, 2 диалога, 5 диалогов. */
 function plural(n: number, one: string, few: string, many: string): string {
@@ -92,7 +102,7 @@ export function Shell({ children }: { children: ReactNode }) {
             ? 'лимиты и подписка'
             : '';
 
-  const nav = (to: string, icon: string, label: string, on: boolean, count?: number) => (
+  const nav = (to: string, icon: ReactNode, label: string, on: boolean, count?: number) => (
     <Link href={href(to)} className={`nav-btn${on ? ' on' : ''}`}>
       <span className="nav-ic">{icon}</span>
       <span>{label}</span>
@@ -108,16 +118,16 @@ export function Shell({ children }: { children: ReactNode }) {
           <Wordmark />
         </div>
         <div className="nav">
-          {nav('/today', '◧', 'Сегодня', isToday, pending)}
-          {nav('/dialogs', '◐', 'Диалоги', isDlg, unread)}
-          {nav('/calendar', '▤', 'Календарь', isCal)}
-          {nav('/objects', '◫', 'Объекты', isObj)}
-          {nav('/plan', '◎', 'Тариф', isPlan)}
+          {nav('/today', <LayoutIcon />, 'Сегодня', isToday, pending)}
+          {nav('/dialogs', <ChatIcon />, 'Диалоги', isDlg, unread)}
+          {nav('/calendar', <CalendarIcon />, 'Календарь', isCal)}
+          {nav('/objects', <BuildingIcon />, 'Объекты', isObj)}
+          {nav('/plan', <CardIcon />, 'Тариф', isPlan)}
         </div>
         <div className="nav-sep" />
         <div className="nav">
-          {nav('/settings', '⚙', 'Настройки', isSet)}
-          {!readOnly && nav('/ds', '◈', 'Дизайн-система', isDs)}
+          {nav('/settings', <SettingsIcon />, 'Настройки', isSet)}
+          {!readOnly && nav('/ds', <PaletteIcon />, 'Дизайн-система', isDs)}
           <button
             className="nav-btn"
             onClick={() => {
@@ -130,7 +140,9 @@ export function Shell({ children }: { children: ReactNode }) {
               router.push('/');
             }}
           >
-            <span className="nav-ic">⇥</span>
+            <span className="nav-ic">
+              <LogoutIcon />
+            </span>
             <span>{readOnly ? 'Закрыть просмотр' : 'Выйти'}</span>
           </button>
         </div>
@@ -177,21 +189,29 @@ export function Shell({ children }: { children: ReactNode }) {
 
       <nav className="mbar">
         <Link href={href('/today')} className={isToday ? 'on' : ''}>
-          <span className="ic">◧</span>
+          <span className="ic">
+            <LayoutIcon size={18} />
+          </span>
           Сегодня
         </Link>
         {/* On the move the owner checks what the bot answered, so Диалоги takes
             a bar slot and Объекты moves under «Ещё» (§1). */}
         <Link href={href('/dialogs')} className={isDlg ? 'on' : ''}>
-          <span className="ic">◐</span>
+          <span className="ic">
+            <ChatIcon size={18} />
+          </span>
           Диалоги
         </Link>
         <Link href={href('/calendar')} className={isCal ? 'on' : ''}>
-          <span className="ic">▤</span>
+          <span className="ic">
+            <CalendarIcon size={18} />
+          </span>
           Календарь
         </Link>
         <Link href={href('/settings')} className={isSet || isObj ? 'on' : ''}>
-          <span className="ic">⚙</span>
+          <span className="ic">
+            <SettingsIcon size={18} />
+          </span>
           Ещё
         </Link>
         {!readOnly && !isDlg && (

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useOpsAuth } from '../../lib/ops-auth';
 import { BrandMark, Wordmark } from '../BrandMark';
+import { LayoutIcon, LogoutIcon, UsersIcon } from '../icons';
 
 export function OpsShell({ children }: { children: ReactNode }) {
   const { ready, token, logout } = useOpsAuth();
@@ -31,11 +32,15 @@ export function OpsShell({ children }: { children: ReactNode }) {
         </div>
         <div className="nav">
           <Link href="/ops" className={`nav-btn${path === '/ops' ? ' on' : ''}`}>
-            <span className="nav-ic">▣</span>
+            <span className="nav-ic">
+              <LayoutIcon />
+            </span>
             Сводка
           </Link>
           <Link href="/ops/clients" className={`nav-btn${on('/ops/clients') ? ' on' : ''}`}>
-            <span className="nav-ic">◉</span>
+            <span className="nav-ic">
+              <UsersIcon />
+            </span>
             Клиенты
           </Link>
         </div>
@@ -48,7 +53,9 @@ export function OpsShell({ children }: { children: ReactNode }) {
               router.push('/ops/login');
             }}
           >
-            <span className="nav-ic">⇥</span>
+            <span className="nav-ic">
+              <LogoutIcon />
+            </span>
             Выйти
           </button>
         </div>
