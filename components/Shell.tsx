@@ -77,9 +77,7 @@ export function Shell({ children }: { children: ReactNode }) {
         })
         .catch(() => {});
     void pullDialogs();
-    const late = logical.startsWith('/dialogs/') ? window.setTimeout(() => void pullDialogs(), 600) : 0;
-    return () => window.clearTimeout(late);
-  }, [token, path, reloadTick]);
+  }, [token, reloadTick]);
 
   const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
   const isCal = logical.startsWith('/calendar') || logical === '/';

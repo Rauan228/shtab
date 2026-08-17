@@ -19,7 +19,7 @@ import { useUi } from '../lib/ui';
 import { dialogTitle } from './Dialogs';
 import { AlertIcon } from './icons';
 
-const POLL_MS = 6000;
+const POLL_MS = 20000;
 
 /** Clock inside a bubble — always Almaty, so it matches the guest's WhatsApp. */
 function clock(iso: string): string {
