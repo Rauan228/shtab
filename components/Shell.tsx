@@ -15,6 +15,7 @@ import {
   ChatIcon,
   LayoutIcon,
   LogoutIcon,
+  MenuIcon,
   PaletteIcon,
   SettingsIcon,
 } from './icons';
@@ -39,6 +40,24 @@ export function Shell({ children }: { children: ReactNode }) {
   const [objCount, setObjCount] = useState(0);
   const [unread, setUnread] = useState(0);
   const [liveChats, setLiveChats] = useState(0);
+  const [navOpen, setNavOpen] = useState(false);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [path]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [navOpen]);
 
   useEffect(() => {
     if (!token) return;
@@ -103,7 +122,7 @@ export function Shell({ children }: { children: ReactNode }) {
             : '';
 
   const nav = (to: string, icon: ReactNode, label: string, on: boolean, count?: number) => (
-    <Link href={href(to)} className={`nav-btn${on ? ' on' : ''}`}>
+    <Link href={href(to)} className={`nav-btn${on ? ' on' : ''}`} onClick={() => setNavOpen(false)}>
       <span className="nav-ic">{icon}</span>
       <span>{label}</span>
       {count ? <span className="nav-count">{count}</span> : null}
@@ -112,7 +131,13 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app">
-      <aside className="sidebar">
+      <button
+        type="button"
+        className={`side-scrim${navOpen ? ' on' : ''}`}
+        aria-label="Закрыть меню"
+        onClick={() => setNavOpen(false)}
+      />
+      <aside className={`sidebar${navOpen ? ' open' : ''}`}>
         <div className="side-brand">
           <BrandMark size={32} />
           <Wordmark />
@@ -131,6 +156,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <button
             className="nav-btn"
             onClick={() => {
+              setNavOpen(false);
               if (readOnly) {
                 const org = navPrefix.split('/').pop();
                 router.push(org ? `/ops/clients/${org}` : '/ops/clients');
@@ -158,9 +184,15 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="main">
         <header className="topbar">
           <div className="top-l">
-            <span className="m-only">
-              <BrandMark size={24} />
-            </span>
+            <button
+              type="button"
+              className="menu-btn"
+              aria-label="Открыть меню"
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen(true)}
+            >
+              <MenuIcon size={20} />
+            </button>
             <div className="top-title">{title}</div>
             {pageMeta ? <div className="top-meta">{pageMeta}</div> : null}
           </div>

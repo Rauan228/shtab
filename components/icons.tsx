@@ -41,6 +41,12 @@ export const PlusIcon = ({ size = 16, className }: Props) => (
   </svg>
 );
 
+export const MenuIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
 export const ChevronLeft = ({ size = 16, className }: Props) => (
   <svg {...base(size)} className={className}>
     <path d="M15 18l-6-6 6-6" />
