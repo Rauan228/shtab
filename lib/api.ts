@@ -158,6 +158,38 @@ async function req<T>(path: string, token: string, init?: RequestInit): Promise<
   return res.json() as Promise<T>;
 }
 
+/** Short GET cache so Today + Shell don't hit the VPS twice on the same screen. */
+const getMemo = new Map<string, { exp: number; val: unknown; wait?: Promise<unknown> }>();
+
+export function invalidateAdminCache(): void {
+  getMemo.clear();
+}
+
+function cachedGet<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const hit = getMemo.get(key);
+  if (hit && hit.exp > now) return Promise.resolve(hit.val as T);
+  if (hit?.wait) return hit.wait as Promise<T>;
+  const wait = load()
+    .then((val) => {
+      getMemo.set(key, { exp: Date.now() + ttlMs, val });
+      return val;
+    })
+    .catch((err) => {
+      getMemo.delete(key);
+      throw err;
+    });
+  getMemo.set(key, { exp: 0, val: undefined, wait });
+  return wait;
+}
+
+const GET_TTL = 20_000;
+
+/** Shared window for Today + the shell badge so both reuse one calendar fetch. */
+export function cabinetCalendarWindow(today: string): { from: string; to: string } {
+  return { from: addDays(today, -1), to: addDays(today, 45) };
+}
+
 export async function login(
   email: string,
   password: string,
@@ -198,13 +230,15 @@ export interface Subscription {
 }
 
 export function getSubscription(token: string): Promise<Subscription> {
-  return req<Subscription>('/subscription', token);
+  return cachedGet(`sub:${token.slice(-8)}`, GET_TTL, () => req<Subscription>('/subscription', token));
 }
 
 // --- calendar ---
 
 export function getCalendar(token: string, from: string, to: string): Promise<CalendarResponse> {
-  return req<CalendarResponse>(`/calendar?from=${from}&to=${to}`, token);
+  return cachedGet(`cal:${token.slice(-8)}:${from}:${to}`, GET_TTL, () =>
+    req<CalendarResponse>(`/calendar?from=${from}&to=${to}`, token),
+  );
 }
 
 export function getQuote(
@@ -305,7 +339,7 @@ export function removeBlock(token: string, id: string): Promise<{ ok: boolean }>
 // --- apartments ---
 
 export function listApartments(token: string): Promise<{ apartments: ApartmentListItem[] }> {
-  return req(`/apartments`, token);
+  return cachedGet(`apts:${token.slice(-8)}`, GET_TTL, () => req(`/apartments`, token));
 }
 
 export function getApartment(
@@ -411,7 +445,9 @@ export function listDialogs(
   if (opts.filter && opts.filter !== 'all') p.set('filter', opts.filter);
   if (opts.channel) p.set('channel', opts.channel);
   const qs = p.toString();
-  return req(`/dialogs${qs ? `?${qs}` : ''}`, token);
+  const load = () => req<{ dialogs: DialogListItem[] }>(`/dialogs${qs ? `?${qs}` : ''}`, token);
+  if (!qs) return cachedGet(`dlg:${token.slice(-8)}`, GET_TTL, load);
+  return load();
 }
 
 export function getDialog(

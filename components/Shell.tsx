@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
-import { addDays, getCalendar, listDialogs, todayIso } from '../lib/api';
+import { addDays, cabinetCalendarWindow, getCalendar, listDialogs, todayIso } from '../lib/api';
 import { useUi } from '../lib/ui';
 import { BrandMark, Wordmark } from './BrandMark';
 import { Confirm, Drawer } from './Drawer';
@@ -33,7 +33,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { token, logout } = useAuth();
-  const { toast, openDrawer, readOnly, navPrefix, href } = useUi();
+  const { toast, openDrawer, readOnly, navPrefix, href, reloadTick } = useUi();
   const logical =
     navPrefix && path.startsWith(navPrefix) ? path.slice(navPrefix.length) || '/calendar' : path;
   const [pending, setPending] = useState(0);
@@ -61,8 +61,8 @@ export function Shell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) return;
-    const from = todayIso();
-    getCalendar(token, from, addDays(from, 45))
+    const { from, to } = cabinetCalendarWindow(todayIso());
+    getCalendar(token, from, to)
       .then((r) => {
         setObjCount(r.properties.length);
         setPending(r.events.filter((e) => e.kind === 'booking' && e.status === 'pending').length);
@@ -74,7 +74,7 @@ export function Shell({ children }: { children: ReactNode }) {
         setLiveChats(r.dialogs.length);
       })
       .catch(() => {});
-  }, [token, path]);
+  }, [token, path, reloadTick]);
 
   const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
   const isCal = logical.startsWith('/calendar') || logical === '/';

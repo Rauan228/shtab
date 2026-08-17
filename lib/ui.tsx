@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { invalidateAdminCache } from './api';
 
 export type DrawerMode = 'booking' | 'block' | 'edit';
 
@@ -88,7 +89,10 @@ export function UiProvider({
         closeConfirm: () => setConfirm(null),
         doConfirm,
         reloadTick,
-        bump: () => setReload((n) => n + 1),
+        bump: () => {
+          invalidateAdminCache();
+          setReload((n) => n + 1);
+        },
       }}
     >
       {children}

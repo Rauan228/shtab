@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   addDays,
+  cabinetCalendarWindow,
   formatDateLong,
   formatDateRu,
   formatKzt,
   getCalendar,
-  getSubscription,
   listApartments,
   listDialogs,
   nightsBetween,
@@ -25,6 +25,7 @@ import {
   AlertIcon,
   BanIcon,
   CalendarIcon,
+  ChevronDown,
   DoorInIcon,
   DoorOutIcon,
   HomeIcon,
@@ -61,14 +62,6 @@ function nightlyShare(e: CalendarEvent): number {
   return e.totalPrice / n;
 }
 
-function greetName(org?: string, email?: string): string {
-  const n = org?.trim();
-  if (n && !/^org[-_]/i.test(n) && n.toLowerCase() !== 'pilot') return n;
-  const local = email?.split('@')[0]?.trim();
-  if (local && local !== 'legacy' && local !== 'legacy@local') return local;
-  return '';
-}
-
 export function Today() {
   const { token } = useAuth();
   const { openDrawer, reloadTick, href, readOnly } = useUi();
@@ -77,8 +70,9 @@ export function Today() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [notReady, setNotReady] = useState(0);
-  const [hello, setHello] = useState('');
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [aptsOpen, setAptsOpen] = useState(false);
   const [chatByBooking, setChatByBooking] = useState<Record<string, string>>({});
 
   const today = todayIso();
@@ -87,25 +81,41 @@ export function Today() {
 
   useEffect(() => {
     if (!token) return;
-    const from = addDays(today, -7);
-    const to = addDays(today, 31);
-    Promise.all([getCalendar(token, from, to), listApartments(token), getSubscription(token).catch(() => null)])
-      .then(([cal, list, sub]) => {
+    let live = true;
+    const { from, to } = cabinetCalendarWindow(today);
+    setLoading(true);
+    getCalendar(token, from, to)
+      .then((cal) => {
+        if (!live) return;
         setProperties(cal.properties);
         setEvents(cal.events);
-        setNotReady(list.apartments.filter((a) => !a.archived && !a.ready).length);
-        setHello(greetName(sub?.org.name, sub?.user.email));
         setErr('');
       })
-      .catch((e) => setErr(e instanceof Error ? e.message : 'Ошибка загрузки'));
+      .catch((e) => {
+        if (live) setErr(e instanceof Error ? e.message : 'Ошибка загрузки');
+      })
+      .finally(() => {
+        if (live) setLoading(false);
+      });
 
     listDialogs(token)
       .then((r) => {
+        if (!live) return;
         const map: Record<string, string> = {};
         for (const d of r.dialogs) if (d.booking) map[d.booking.id] = d.chatId;
         setChatByBooking(map);
       })
       .catch(() => {});
+
+    listApartments(token)
+      .then((list) => {
+        if (live) setNotReady(list.apartments.filter((a) => !a.archived && !a.ready).length);
+      })
+      .catch(() => {});
+
+    return () => {
+      live = false;
+    };
   }, [token, reloadTick, today]);
 
   const titles = useMemo(
@@ -116,30 +126,41 @@ export function Today() {
   const stats = useMemo(() => {
     const apts = properties.filter((p) => !p.archived);
     const aptN = Math.max(apts.length, 1);
+    const byProp = new Map<string, CalendarEvent[]>();
+    for (const e of events) {
+      const list = byProp.get(e.propertyId);
+      if (list) list.push(e);
+      else byProp.set(e.propertyId, [e]);
+    }
+    const rows = (id: string) => byProp.get(id) ?? [];
+    const stayOn = (id: string, day: string) => rows(id).find((e) => isStay(e, day));
+    const blockOn = (id: string, day: string) =>
+      rows(id).find((e) => e.kind === 'block' && e.begin <= day && day < e.end);
+
     let guestNights = 0;
     let blockNights = 0;
     let revenue = 0;
     const occByDay: { iso: string; pct: number }[] = [];
     const occByApt = apts.map((p) => {
-      let nights = 0;
-      for (const day of win.days) {
-        if (events.some((e) => e.propertyId === p.id && isStay(e, day))) nights += 1;
-      }
-      return { id: p.id, title: p.title, nights, of: win.days.length };
+      const stay = stayOn(p.id, snapDay);
+      const blocked = !stay && blockOn(p.id, snapDay);
+      return {
+        id: p.id,
+        title: p.title,
+        state: (stay ? 'busy' : blocked ? 'block' : 'free') as 'busy' | 'free' | 'block',
+        guest: stay?.guestName,
+      };
     });
 
     for (const day of win.days) {
       let occ = 0;
       for (const p of apts) {
-        const stay = events.find((e) => e.propertyId === p.id && isStay(e, day));
-        const blocked = events.some(
-          (e) => e.kind === 'block' && e.propertyId === p.id && e.begin <= day && day < e.end,
-        );
+        const stay = stayOn(p.id, day);
         if (stay) {
           occ += 1;
           guestNights += 1;
           revenue += nightlyShare(stay);
-        } else if (blocked) {
+        } else if (blockOn(p.id, day)) {
           blockNights += 1;
         }
       }
@@ -222,7 +243,7 @@ export function Today() {
       )}
 
       <div className="dash-hello">
-        <h1>{hello ? `Привет, ${hello}` : 'Сводка'}</h1>
+        <h1>Сводка</h1>
         <p>Как дела по квартирам за период — заезды, загрузка и деньги с броней.</p>
         <div className="dash-period">
           <div className="seg">
@@ -334,29 +355,47 @@ export function Today() {
           </div>
         </div>
         <div className="card dash-apts">
-          <div className="dash-apts-h">
-            <span>Квартиры</span>
-            <span>Занято</span>
-          </div>
-          {stats.occByApt.length === 0 ? (
-            <div className="op-row" style={{ color: 'oklch(0.55 0.012 250)', fontSize: 13 }}>
-              Нет объектов
-            </div>
-          ) : (
-            stats.occByApt.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                className="dash-apt"
-                onClick={() => router.push(href('/calendar'))}
-              >
-                <span className="trunc">{a.title}</span>
-                <span className="mono">
-                  {a.nights} / {a.of}
-                </span>
-              </button>
-            ))
-          )}
+          <button
+            type="button"
+            className={`dash-apts-toggle${aptsOpen ? ' open' : ''}`}
+            aria-expanded={aptsOpen}
+            onClick={() => setAptsOpen((v) => !v)}
+          >
+            <span className="dash-apts-toggle-l">
+              <ChevronDown size={16} />
+              Квартиры
+              <em>{stats.occByApt.length}</em>
+            </span>
+            <span className="dash-apts-sum">
+              <i className="busy" />
+              {stats.occByApt.filter((a) => a.state === 'busy').length} занято
+              <i className="free" />
+              {stats.occByApt.filter((a) => a.state === 'free').length} свободно
+            </span>
+          </button>
+          {aptsOpen &&
+            (stats.occByApt.length === 0 ? (
+              <div className="op-row" style={{ color: 'oklch(0.55 0.012 250)', fontSize: 13 }}>
+                {loading ? 'Загрузка…' : 'Нет объектов'}
+              </div>
+            ) : (
+              stats.occByApt.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className="dash-apt"
+                  onClick={() => router.push(href('/calendar'))}
+                >
+                  <span className="dash-apt-txt">
+                    <span className="trunc">{a.title}</span>
+                    {a.guest ? <span className="dash-apt-guest">{a.guest}</span> : null}
+                  </span>
+                  <span className={`dash-st ${a.state}`}>
+                    {a.state === 'busy' ? 'Занято' : a.state === 'block' ? 'Блок' : 'Свободно'}
+                  </span>
+                </button>
+              ))
+            ))}
         </div>
       </div>
 

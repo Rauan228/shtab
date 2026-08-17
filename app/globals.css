@@ -707,22 +707,67 @@ a:hover { color: var(--brand-hover); }
 .dash-money-v { font-size: 18px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .dash-money-h { font-size: 11px; color: var(--fg-faint); margin-top: 3px; line-height: 1.35; }
 .dash-apts { margin-top: 12px; overflow: hidden; }
-.dash-apts-h {
+.dash-apts-toggle {
+  width: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--fg-muted);
-  border-bottom: 1px solid var(--line);
+  border: none;
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
+.dash-apts-toggle.open { border-bottom: 1px solid var(--line); }
+.dash-apts-toggle:hover { background: var(--soft); }
+.dash-apts-toggle-l {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+.dash-apts-toggle-l svg {
+  color: var(--fg-faint);
+  transition: transform 0.16s ease;
+  flex: none;
+}
+.dash-apts-toggle.open svg { transform: rotate(180deg); }
+.dash-apts-toggle-l em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--fg-faint);
+}
+.dash-apts-sum {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  flex: none;
+}
+.dash-apts-sum > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  display: inline-block;
+}
+.dash-apts-sum > i.busy { background: oklch(0.58 0.17 25); margin-left: 6px; }
+.dash-apts-sum > i.busy:first-child { margin-left: 0; }
+.dash-apts-sum > i.free { background: oklch(0.55 0.13 155); margin-left: 8px; }
 .dash-apt {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 11px 16px;
   border: none;
   border-bottom: 1px solid var(--line);
   background: #fff;
@@ -731,6 +776,23 @@ a:hover { color: var(--brand-hover); }
 }
 .dash-apt:last-child { border-bottom: none; }
 .dash-apt:hover { background: var(--soft); }
+.dash-apt-txt {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dash-apt-guest { font-size: 11px; color: var(--fg-muted); }
+.dash-st {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.dash-st.busy { background: oklch(0.95 0.04 25); color: oklch(0.48 0.16 25); }
+.dash-st.free { background: oklch(0.94 0.05 155); color: oklch(0.34 0.09 155); }
+.dash-st.block { background: oklch(0.94 0.006 250); color: oklch(0.45 0.012 250); }
 .dash-op { width: 100%; border: none; background: #fff; cursor: pointer; }
 .dash-op:hover { background: var(--soft); }
 
