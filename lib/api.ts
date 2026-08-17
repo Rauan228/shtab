@@ -528,6 +528,17 @@ export function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+export function startOfMonth(iso: string): string {
+  return `${iso.slice(0, 8)}01`;
+}
+
+/** Shift by whole months from the 1st, so day-31 overflow cannot skip a month. */
+export function addMonths(iso: string, months: number): string {
+  const d = new Date(`${startOfMonth(iso)}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
+
 export function nightsBetween(from: string, to: string): number {
   return Math.max(
     0,

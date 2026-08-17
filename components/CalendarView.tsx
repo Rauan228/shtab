@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDays,
+  addMonths,
+  dayOfWeek,
   formatDateRu,
+  formatMonthYear,
   getCalendar,
   lifecycleStage,
   nightsBetween,
+  startOfMonth,
   todayIso,
   type CalendarEvent,
   type Property,
@@ -14,10 +18,27 @@ import {
 import { useAuth } from '../lib/auth';
 import { ST, type CalStatus } from '../lib/status';
 import { useUi } from '../lib/ui';
+import { ChevronLeft, ChevronRight } from './icons';
 
 const CW = 38;
 const DAY_COUNT = 30;
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const WD_MON = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+
+function mondayIndex(iso: string): number {
+  const sun = dayOfWeek(iso);
+  return sun === 0 ? 6 : sun - 1;
+}
+
+function monthCells(monthStart: string): { iso: string; num: number; inMonth: boolean }[] {
+  const lead = mondayIndex(monthStart);
+  const start = addDays(monthStart, -lead);
+  const next = addMonths(monthStart, 1);
+  return Array.from({ length: 42 }, (_, i) => {
+    const iso = addDays(start, i);
+    return { iso, num: Number(iso.slice(8, 10)), inMonth: iso >= monthStart && iso < next };
+  });
+}
 
 function isoFrom(start: string, i: number): string {
   return addDays(start, i);
@@ -43,6 +64,7 @@ export function CalendarView() {
   const [err, setErr] = useState('');
   const [drag, setDrag] = useState<{ p: string; a: number; b: number } | null>(null);
   const [mProp, setMProp] = useState('');
+  const [monthOffset, setMonthOffset] = useState(0);
   const dragRef = useRef(drag);
   const movedRef = useRef(false);
   dragRef.current = drag;
@@ -50,19 +72,23 @@ export function CalendarView() {
   const today = todayIso();
   const from = useMemo(() => addDays(today, offset * 14), [today, offset]);
   const to = useMemo(() => addDays(from, DAY_COUNT), [from]);
+  const monthStart = useMemo(() => addMonths(startOfMonth(today), monthOffset), [today, monthOffset]);
+  const mCells = useMemo(() => monthCells(monthStart), [monthStart]);
+  const loadFrom = from < mCells[0]!.iso ? from : mCells[0]!.iso;
+  const loadTo = to > addDays(mCells[41]!.iso, 1) ? to : addDays(mCells[41]!.iso, 1);
 
   const load = useCallback(async () => {
     if (!token) return;
     setErr('');
     try {
-      const r = await getCalendar(token, from, to);
+      const r = await getCalendar(token, loadFrom, loadTo);
       setProperties(r.properties);
       setEvents(r.events);
       setMProp((id) => id || r.properties[0]?.id || '');
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Не удалось загрузить календарь');
     }
-  }, [token, from, to]);
+  }, [token, loadFrom, loadTo]);
 
   useEffect(() => {
     void load();
@@ -308,68 +334,99 @@ export function CalendarView() {
             </div>
           </div>
 
-          <div className="m-chips">
-            {properties.map((p) => (
-              <button key={p.id} className={`m-chip${mProp === p.id ? ' on' : ''}`} onClick={() => setMProp(p.id)}>
-                {p.title.split(',')[0]}
+          <div className="m-cal">
+            <div className="m-cal-nav">
+              <button type="button" className="btn btn-icon" aria-label="Предыдущий месяц" onClick={() => setMonthOffset((n) => n - 1)}>
+                <ChevronLeft />
               </button>
-            ))}
-          </div>
-          <div className="m-days">
-            {days.slice(0, 16).map((dd, i) => {
-              const b = mP
-                ? events.find(
-                    (e) =>
-                      e.propertyId === mP.id &&
-                      e.status !== 'cancelled' &&
-                      dd.iso >= e.begin &&
-                      dd.iso < e.end,
-                  )
-                : undefined;
-              const st = b ? eventStatus(b, today) : null;
-              const c = st ? ST[st] : null;
-              return (
-                <div
-                  key={dd.iso}
-                  className="m-day"
-                  onClick={() => {
-                    if (b) {
-                      openDrawer({
-                        mode: 'edit',
-                        propertyId: b.propertyId,
-                        checkIn: b.begin,
-                        checkOut: b.end,
-                        eventId: b.id,
-                        kind: b.kind,
-                      });
-                    } else if (mP) {
-                      finishRange(mP.id, i, i);
+              <div className="m-cal-title">{formatMonthYear(monthStart)}</div>
+              <button type="button" className="btn btn-icon" aria-label="Следующий месяц" onClick={() => setMonthOffset((n) => n + 1)}>
+                <ChevronRight />
+              </button>
+              <button type="button" className="btn btn-xs" onClick={() => setMonthOffset(0)}>
+                Сегодня
+              </button>
+            </div>
+            <label className="m-cal-apt">
+              <span>Квартира</span>
+              <select
+                className="inp"
+                value={mP?.id ?? ''}
+                onChange={(e) => setMProp(e.target.value)}
+              >
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title.replace(/\s+/g, ' ').trim()}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="m-cal-wd">
+              {WD_MON.map((w) => (
+                <div key={w}>{w}</div>
+              ))}
+            </div>
+            <div className="m-cal-grid">
+              {mCells.map((cell) => {
+                const b = mP
+                  ? events.find(
+                      (e) =>
+                        e.propertyId === mP.id &&
+                        e.status !== 'cancelled' &&
+                        cell.iso >= e.begin &&
+                        cell.iso < e.end,
+                    )
+                  : undefined;
+                const st = b ? eventStatus(b, today) : null;
+                const c = st ? ST[st] : null;
+                const isToday = cell.iso === today;
+                return (
+                  <button
+                    key={cell.iso}
+                    type="button"
+                    className={`m-cal-cell${cell.inMonth ? '' : ' out'}${isToday ? ' today' : ''}${c ? ' busy' : ''}`}
+                    style={
+                      c
+                        ? { background: c.bg, borderColor: c.bd, color: c.fg }
+                        : undefined
                     }
-                  }}
-                >
-                  <div className="dn">
-                    <div className={`n${dd.today ? ' today' : ''}`}>{dd.num}</div>
-                    <div className="w">{dd.wd}</div>
-                  </div>
-                  <div className="m-pill" style={c ? { background: c.bg, borderColor: c.bd, color: c.fg } : undefined}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <span
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: 2,
-                          background: c ? c.dot : 'oklch(0.8 0.008 250)',
-                          flex: 'none',
-                        }}
-                      />
-                      <span style={{ fontSize: 13, fontWeight: 500 }}>
-                        {b ? (b.kind === 'block' ? b.guestName || 'Недоступно' : b.guestName || 'Бронь') : 'Свободно'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                    onClick={() => {
+                      if (!mP) return;
+                      if (b) {
+                        openDrawer({
+                          mode: 'edit',
+                          propertyId: b.propertyId,
+                          checkIn: b.begin,
+                          checkOut: b.end,
+                          eventId: b.id,
+                          kind: b.kind,
+                        });
+                      } else if (cell.inMonth) {
+                        openDrawer({
+                          mode: 'booking',
+                          propertyId: mP.id,
+                          checkIn: cell.iso,
+                          checkOut: addDays(cell.iso, 1),
+                        });
+                      }
+                    }}
+                  >
+                    <span className="m-cal-num">{cell.num}</span>
+                    {b ? (
+                      <span className="m-cal-dot" style={{ background: c?.dot }} />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="m-cal-leg">
+              {(Object.keys(ST) as CalStatus[]).map((id) => (
+                <span key={id} className="m-cal-leg-i">
+                  <i style={{ background: ST[id].dot }} />
+                  {ST[id].short}
+                </span>
+              ))}
+            </div>
           </div>
         </>
       )}
