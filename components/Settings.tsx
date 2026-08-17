@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getPayout, savePayout, type OrgPayout, type PayoutMethod } from '../lib/api';
+import { getPayout, savePayout, type PayoutMethod } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
+import { BuildingIcon, CardIcon, ChevronRight } from './icons';
 
 export function Settings() {
   const { href, flash, readOnly } = useUi();
@@ -52,23 +53,29 @@ export function Settings() {
 
   return (
     <div className="set">
-      {/* Объекты left the mobile bar to make room for Диалоги, so this is the
-          way back to it on a phone. */}
-      <Link
-        href={href('/objects')}
-        className="card card-pad"
-        style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
-      >
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
-        <div style={{ fontSize: 13, lineHeight: 1.55, color: 'oklch(0.4 0.012 250)' }}>
-          Квартиры, цены, фото и инструкции заезда — данные, по которым отвечает бот.
-        </div>
+      <Link href={href('/objects')} className="card card-pad more-row">
+        <span className="more-ic">
+          <BuildingIcon />
+        </span>
+        <span>
+          <div className="more-t">Объекты</div>
+          <div className="more-s">Квартиры, цены, фото и инструкции заезда</div>
+        </span>
+        <span className="more-go">
+          <ChevronRight />
+        </span>
       </Link>
-      <Link href={href('/plan')} className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Тариф и лимиты</div>
-        <div style={{ fontSize: 13, lineHeight: 1.55, color: 'oklch(0.4 0.012 250)' }}>
-          Сколько квартир и диалогов осталось, что входит в подписку, как докупить пакет.
-        </div>
+      <Link href={href('/plan')} className="card card-pad more-row">
+        <span className="more-ic">
+          <CardIcon />
+        </span>
+        <span>
+          <div className="more-t">Тариф и лимиты</div>
+          <div className="more-s">Сколько квартир и диалогов осталось в подписке</div>
+        </span>
+        <span className="more-go">
+          <ChevronRight />
+        </span>
       </Link>
 
       <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

@@ -183,6 +183,26 @@ a:hover { color: var(--brand-hover); }
   border-radius: var(--r-lg);
 }
 .card-pad { padding: 16px; }
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.more-row .more-ic {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  display: grid;
+  place-items: center;
+}
+.more-row .more-t { font-size: 14px; font-weight: 600; }
+.more-row .more-s { font-size: 12px; line-height: 1.4; color: oklch(0.45 0.012 250); margin-top: 2px; }
+.more-row .more-go { margin-left: auto; color: var(--fg-faint); flex: none; }
 .card-h {
   padding: 13px 15px;
   border-bottom: 1px solid var(--line);
