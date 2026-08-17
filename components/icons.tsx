@@ -205,3 +205,26 @@ export const UsersIcon = ({ size = 16, className }: Props) => (
     <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
+
+export const DoorInIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+    <path d="m10 17 5-5-5-5" />
+    <path d="M15 12H3" />
+  </svg>
+);
+
+export const DoorOutIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5" />
+    <path d="M21 12H9" />
+  </svg>
+);
+
+export const BanIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="m4.9 4.9 14.2 14.2" />
+  </svg>
+);

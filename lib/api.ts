@@ -581,6 +581,11 @@ export function formatDateRu(iso: string): string {
   return `${dayNumber(iso)} ${MONTH_GEN[monthIndex(iso)]}`;
 }
 
+/** "17 августа 2026" — dashboard period pill. */
+export function formatDateLong(iso: string): string {
+  return `${formatDateRu(iso)} ${new Date(`${iso}T12:00:00Z`).getUTCFullYear()}`;
+}
+
 /** "Март 2026" — for the calendar's month band. */
 export function formatMonthYear(iso: string): string {
   const y = new Date(`${iso}T12:00:00Z`).getUTCFullYear();
