@@ -709,8 +709,120 @@ a:hover { color: var(--brand-hover); }
   font-weight: 600;
   letter-spacing: -0.02em;
 }
-.m-cal-apt { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.m-cal-apt > span { font-size: 11px; font-weight: 500; color: oklch(0.45 0.012 250); }
+.m-cal-apt {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.m-cal-apt > span {
+  font-size: 11px;
+  font-weight: 500;
+  color: oklch(0.45 0.012 250);
+}
+.m-cal-apt-btn,
+.m-cal-apt-opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-cal-apt-btn {
+  min-height: 48px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.m-cal-apt-btn:hover { border-color: var(--brand-mid); }
+.m-cal-apt-btn.open,
+.m-cal-apt-btn:focus-visible {
+  outline: none;
+  border-color: var(--brand-mid);
+  box-shadow: 0 0 0 3px rgb(26 154 150 / 0.18);
+}
+.m-cal-apt-ic {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.m-cal-apt-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.m-cal-apt-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-cal-apt-meta {
+  font-size: 11px;
+  color: var(--fg-muted);
+  line-height: 1.3;
+}
+.m-cal-apt-chev {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--fg-faint);
+  transition: transform 0.18s ease;
+}
+.m-cal-apt-btn.open .m-cal-apt-chev { transform: rotate(180deg); color: var(--brand); }
+.m-cal-apt-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px oklch(0.35 0.02 200 / 0.16), 0 1px 2px oklch(0.4 0.01 250 / 0.06);
+  max-height: min(52vh, 320px);
+  overflow-y: auto;
+  animation: fadeUp 0.16s ease both;
+}
+.m-cal-apt-opt {
+  min-height: 52px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 10px;
+}
+.m-cal-apt-opt.hi { background: var(--soft); }
+.m-cal-apt-opt.on {
+  background: var(--brand-soft);
+}
+.m-cal-apt-opt.on .m-cal-apt-name { color: var(--brand-deep); }
+.m-cal-apt-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--brand);
+}
+.m-cal-apt-opt .m-cal-apt-ic { width: 28px; height: 28px; border-radius: 8px; }
+.m-cal-apt-opt.on .m-cal-apt-ic { background: #fff; }
 .m-cal-wd {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

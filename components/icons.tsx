@@ -59,6 +59,12 @@ export const ChevronRight = ({ size = 16, className }: Props) => (
   </svg>
 );
 
+export const ChevronDown = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+);
+
 export const XIcon = ({ size = 16, className }: Props) => (
   <svg {...base(size)} className={className}>
     <path d="M18 6 6 18M6 6l12 12" />

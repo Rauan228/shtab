@@ -6,6 +6,7 @@ import {
   addMonths,
   dayOfWeek,
   formatDateRu,
+  formatKzt,
   formatMonthYear,
   getCalendar,
   lifecycleStage,
@@ -18,7 +19,7 @@ import {
 import { useAuth } from '../lib/auth';
 import { ST, type CalStatus } from '../lib/status';
 import { useUi } from '../lib/ui';
-import { ChevronLeft, ChevronRight } from './icons';
+import { BuildingIcon, CheckIcon, ChevronDown, ChevronLeft, ChevronRight } from './icons';
 
 const CW = 38;
 const DAY_COUNT = 30;
@@ -42,6 +43,146 @@ function monthCells(monthStart: string): { iso: string; num: number; inMonth: bo
 
 function isoFrom(start: string, i: number): string {
   return addDays(start, i);
+}
+
+function aptTitle(p: Property): string {
+  return p.title.replace(/\s+/g, ' ').trim();
+}
+
+function aptMeta(p: Property): string {
+  const price = p.basePrice > 0 ? formatKzt(p.basePrice) : 'нет цены';
+  return `${price} · до ${p.maxGuests} гостей`;
+}
+
+function AptPicker({
+  properties,
+  value,
+  onChange,
+}: {
+  properties: Property[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState(0);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const selected = properties.find((p) => p.id === value) ?? properties[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const i = properties.findIndex((p) => p.id === selected?.id);
+    setHi(i < 0 ? 0 : i);
+    const onDoc = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setOpen(false);
+        btnRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open, properties, selected?.id]);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = wrapRef.current?.querySelector<HTMLElement>(`[data-idx="${hi}"]`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [hi, open]);
+
+  const pick = (id: string) => {
+    onChange(id);
+    setOpen(false);
+    btnRef.current?.focus();
+  };
+
+  const onTriggerKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!open) {
+        setOpen(true);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
+        const p = properties[hi];
+        if (p) pick(p.id);
+      }
+      if (e.key === 'ArrowDown') setHi((i) => (i + 1) % properties.length);
+    }
+    if (e.key === 'ArrowUp' && open) {
+      e.preventDefault();
+      setHi((i) => (i - 1 + properties.length) % properties.length);
+    }
+  };
+
+  if (!selected) return null;
+
+  return (
+    <div className="m-cal-apt" ref={wrapRef}>
+      <span id="m-cal-apt-lbl">Квартира</span>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`m-cal-apt-btn${open ? ' open' : ''}`}
+        aria-labelledby="m-cal-apt-lbl"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={onTriggerKey}
+      >
+        <span className="m-cal-apt-ic" aria-hidden>
+          <BuildingIcon size={16} />
+        </span>
+        <span className="m-cal-apt-txt">
+          <span className="m-cal-apt-name">{aptTitle(selected)}</span>
+          <span className="m-cal-apt-meta">{aptMeta(selected)}</span>
+        </span>
+        <span className="m-cal-apt-chev" aria-hidden>
+          <ChevronDown size={16} />
+        </span>
+      </button>
+      {open && (
+        <ul className="m-cal-apt-menu" role="listbox" aria-labelledby="m-cal-apt-lbl">
+          {properties.map((p, i) => {
+            const on = p.id === selected.id;
+            return (
+              <li key={p.id} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={on}
+                  data-idx={i}
+                  className={`m-cal-apt-opt${on ? ' on' : ''}${i === hi ? ' hi' : ''}`}
+                  onMouseEnter={() => setHi(i)}
+                  onClick={() => pick(p.id)}
+                >
+                  <span className="m-cal-apt-ic" aria-hidden>
+                    <BuildingIcon size={15} />
+                  </span>
+                  <span className="m-cal-apt-txt">
+                    <span className="m-cal-apt-name">{aptTitle(p)}</span>
+                    <span className="m-cal-apt-meta">{aptMeta(p)}</span>
+                  </span>
+                  {on ? (
+                    <span className="m-cal-apt-check" aria-hidden>
+                      <CheckIcon size={16} />
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 function eventStatus(e: CalendarEvent, today: string): CalStatus | null {
@@ -347,20 +488,7 @@ export function CalendarView() {
                 Сегодня
               </button>
             </div>
-            <label className="m-cal-apt">
-              <span>Квартира</span>
-              <select
-                className="inp"
-                value={mP?.id ?? ''}
-                onChange={(e) => setMProp(e.target.value)}
-              >
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title.replace(/\s+/g, ' ').trim()}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <AptPicker properties={properties} value={mP?.id ?? ''} onChange={setMProp} />
             <div className="m-cal-wd">
               {WD_MON.map((w) => (
                 <div key={w}>{w}</div>
