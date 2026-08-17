@@ -567,11 +567,17 @@ a:hover { color: var(--brand-hover); }
 .kpi .row { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
 .kpi .v { font-size: 26px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
 .kpi .h { font-size: 11px; color: var(--fg-faint); }
-.today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.today-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 16px; }
+.today-grid > * { min-width: 0; max-width: 100%; }
+.dash { min-width: 0; overflow-x: clip; }
 .op-row {
   display: flex; align-items: center; gap: 12px;
   padding: 11px 15px; border-bottom: 1px solid var(--line);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
+.op-time { flex: none; font-variant-numeric: tabular-nums; }
 .op-tag {
   font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 6px;
   flex: none; width: 52px; text-align: center;
@@ -643,7 +649,7 @@ a:hover { color: var(--brand-hover); }
 .dash-ops-wrap { padding: 12px; }
 .dash-ops {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 .dash-tile {
@@ -679,7 +685,7 @@ a:hover { color: var(--brand-hover); }
 .dash-tile-l { font-size: 12px; color: var(--fg-muted); margin-top: 3px; }
 .dash-fin {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 12px;
 }
 .dash-occ {
@@ -687,7 +693,9 @@ a:hover { color: var(--brand-hover); }
   align-items: center;
   gap: 20px;
   padding: 18px 20px;
+  min-width: 0;
 }
+.dash-occ-meta { min-width: 0; flex: 1; }
 .dash-occ-ring {
   position: relative;
   width: 132px;
@@ -1007,7 +1015,10 @@ a:hover { color: var(--brand-hover); }
   display: grid; place-items: center;
   font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: oklch(0.55 0.01 250);
   text-align: center; padding: 4px;
+  overflow: hidden;
 }
+.ph.has-img { padding: 0; background: var(--soft); }
+.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .empty {
   background: var(--panel); border: 1px dashed var(--border-2); border-radius: 14px;
   padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
@@ -1422,19 +1433,32 @@ a:hover { color: var(--brand-hover); }
 
 @media (max-width: 960px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .today-grid { grid-template-columns: 1fr; }
-  .dash-ops { grid-template-columns: 1fr 1fr; }
-  .dash-fin { grid-template-columns: 1fr; }
+  .today-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-ops { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-fin { grid-template-columns: minmax(0, 1fr); }
   .rep-layout { grid-template-columns: 1fr; }
-  .dash-occ { flex-direction: column; align-items: flex-start; }
+  .dash-occ {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 14px;
+    padding: 14px 16px;
+  }
+  .dash-occ-ring { width: 88px; height: 88px; }
+  .dash-occ-val { font-size: 18px; }
+  .dash-bars { grid-column: 1 / -1; margin-top: 2px; height: 56px; }
+  .dash-bar-track { height: 40px; }
+  .dash-apts-toggle { flex-wrap: wrap; row-gap: 6px; }
+  .dash-apts-sum { justify-content: flex-start; }
   .g2 { grid-template-columns: 1fr; }
   .login { grid-template-columns: 1fr; }
   .login-r { display: none; }
   .login-l { padding: 48px 24px; border-right: none; }
+  .obj-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 820px) {
-  .app { grid-template-columns: 1fr; padding-bottom: 84px; }
+  .app { grid-template-columns: 1fr; padding-bottom: 118px; }
   .menu-btn { display: grid; }
   .side-scrim.on {
     display: block;
@@ -1466,7 +1490,7 @@ a:hover { color: var(--brand-hover); }
   }
   .topbar { padding: 0 16px; }
   .top-meta { display: none; }
-  .content { padding: 14px 16px 24px; }
+  .content { padding: 14px 16px 28px; overflow-x: hidden; }
   .m-only { display: grid; }
   .mbar {
     display: flex;
@@ -1858,7 +1882,7 @@ html[data-theme="dark"] .ch-telegram { background: #163044; color: #8ec8f0; }
 }
 .theme-btn:hover { background: var(--hover); color: var(--fg); }
 html[data-theme="dark"] .login-l { background: var(--panel); }
-html[data-theme="dark"] .ph,
+html[data-theme="dark"] .ph:not(.has-img),
 html[data-theme="dark"] .photo {
   background: repeating-linear-gradient(135deg, var(--ph-a) 0 6px, var(--ph-b) 6px 12px);
 }

@@ -8,6 +8,7 @@ import {
   getApartment,
   getDateRates,
   listApartmentPhotos,
+  publicPhotoSrc,
   saveApartment,
   saveDateRates,
   type DateRate,
@@ -22,7 +23,7 @@ import { useUi } from '../lib/ui';
 
 export function ObjectDetail({ id }: { id: string }) {
   const { token } = useAuth();
-  const { flash, ask, href, readOnly } = useUi();
+  const { flash, ask, href, readOnly, bump } = useUi();
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [rules, setRules] = useState<PropertyRules | null>(null);
@@ -97,6 +98,7 @@ export function ObjectDetail({ id }: { id: string }) {
       const saved = await uploadApartmentPhoto(token, id, file.name, data);
       setPhotos((p) => [...p, saved.photo]);
     }
+    bump();
     flash('Фото загружены');
   };
 
@@ -429,7 +431,7 @@ export function ObjectDetail({ id }: { id: string }) {
           </div>
           <div className="photo-grid">
             {photos.map((p, i) => (
-              <div key={p.fileName} className="photo" style={{ backgroundImage: `url(${photoSrc(p.url)})`, backgroundSize: 'cover' }}>
+              <div key={p.fileName} className="photo" style={{ backgroundImage: `url(${publicPhotoSrc(p.url)})`, backgroundSize: 'cover' }}>
                 {i === 0 && <span className="cover-tag">главное</span>}
                 {!readOnly && (
                 <button
@@ -437,9 +439,10 @@ export function ObjectDetail({ id }: { id: string }) {
                   className="btn btn-xs"
                   style={{ position: 'absolute', right: 4, bottom: 4 }}
                   onClick={() =>
-                    void deleteApartmentPhoto(token, id, p.fileName).then(() =>
-                      setPhotos((xs) => xs.filter((x) => x.fileName !== p.fileName)),
-                    )
+                    void deleteApartmentPhoto(token, id, p.fileName).then(() => {
+                      setPhotos((xs) => xs.filter((x) => x.fileName !== p.fileName));
+                      bump();
+                    })
                   }
                 >
                   ✕
@@ -472,17 +475,6 @@ export function ObjectDetail({ id }: { id: string }) {
       )}
     </div>
   );
-}
-
-function photoSrc(url: string): string {
-  try {
-    const u = new URL(url, window.location.origin);
-    const i = u.pathname.indexOf('/photos/');
-    if (i >= 0) return u.pathname.slice(i);
-  } catch {
-    /* ignore */
-  }
-  return url;
 }
 
 function fileToDataUrl(file: File): Promise<string> {

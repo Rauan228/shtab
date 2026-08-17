@@ -319,16 +319,18 @@ export function Today() {
                 {stats.staying.length} из {stats.apts.length}{' '}
                 {stats.apts.length === 1 ? 'квартиры' : 'квартир'} на {formatDateRu(snapDay)}
               </div>
-              <div className="dash-bars" aria-hidden>
-                {stats.occByDay.map((d) => (
-                  <div key={d.iso} className="dash-bar">
-                    <div className="dash-bar-track">
-                      <i style={{ height: `${Math.max(d.pct, d.pct > 0 ? 8 : 0)}%` }} />
+              {stats.occByDay.length > 1 ? (
+                <div className="dash-bars" aria-hidden>
+                  {stats.occByDay.map((d) => (
+                    <div key={d.iso} className="dash-bar">
+                      <div className="dash-bar-track">
+                        <i style={{ height: `${Math.max(d.pct, d.pct > 0 ? 8 : 0)}%` }} />
+                      </div>
+                      <span>{d.iso.slice(8)}</span>
                     </div>
-                    <span>{d.iso.slice(8)}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="card dash-money">
@@ -437,7 +439,7 @@ export function Today() {
                       {period === 'week' ? ` · ${formatDateRu(t.day)}` : ''}
                     </div>
                   </div>
-                  <div className="mono" style={{ fontSize: 12 }}>
+                  <div className="op-time mono" style={{ fontSize: 12 }}>
                     {t.time}
                   </div>
                 </button>

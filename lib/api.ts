@@ -31,6 +31,8 @@ export interface ApartmentListItem extends Property {
   rulesFilled: boolean;
   /** True when the apartment has everything the agent needs to sell it. */
   ready: boolean;
+  /** First photo — same file the card marks «главное». Cabinet-relative `/photos/…`. */
+  coverUrl?: string | null;
 }
 
 export interface PropertyRules {
@@ -607,6 +609,18 @@ export function reportDialogError(
  * API — and since `<img>` cannot send an Authorization header, the token rides
  * as a query param on that route only.
  */
+/** Rewrite an absolute VPS photo URL to the cabinet `/photos/…` proxy (avoids mixed content). */
+export function publicPhotoSrc(url: string): string {
+  try {
+    const u = new URL(url, 'http://local');
+    const i = u.pathname.indexOf('/photos/');
+    if (i >= 0) return u.pathname.slice(i);
+  } catch {
+    /* ignore */
+  }
+  return url.startsWith('/photos/') ? url : url;
+}
+
 export function dialogMediaSrc(url: string, token: string): string {
   // The API normalizes every image to /api/admin/dialogs/{media,photo}/… so the
   // cabinet loads it same-origin (the API's own host is plain HTTP on the pilot

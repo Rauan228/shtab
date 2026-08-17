@@ -7,6 +7,7 @@ import {
   deleteApartment,
   formatKzt,
   listApartments,
+  publicPhotoSrc,
   saveApartment,
   type ApartmentListItem,
 } from '../lib/api';
@@ -104,7 +105,14 @@ export function Objects() {
           {list.map((o) => (
             <div key={o.id} className="obj-card" onClick={() => router.push(href(`/objects/${o.id}`))}>
               <div style={{ display: 'flex', gap: 12 }}>
-                <div className="ph">фото</div>
+                <div className={`ph${o.coverUrl ? ' has-img' : ''}`}>
+                  {o.coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={publicPhotoSrc(o.coverUrl)} alt="" />
+                  ) : (
+                    'фото'
+                  )}
+                </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div className="trunc" style={{ fontSize: 14, fontWeight: 600 }}>
