@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDays,
   addMonths,
-  dayOfWeek,
   formatDateRu,
   formatKzt,
   formatMonthYear,
@@ -16,6 +15,7 @@ import {
   type CalendarEvent,
   type Property,
 } from '../lib/api';
+import { monthCells, staySegLen, staySpan, lastNight, WD_MON } from '../lib/cal';
 import { useAuth } from '../lib/auth';
 import { ST, type CalStatus } from '../lib/status';
 import { useUi } from '../lib/ui';
@@ -24,22 +24,6 @@ import { BuildingIcon, CheckIcon, ChevronDown, ChevronLeft, ChevronRight } from 
 const CW = 38;
 const DAY_COUNT = 30;
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
-const WD_MON = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
-
-function mondayIndex(iso: string): number {
-  const sun = dayOfWeek(iso);
-  return sun === 0 ? 6 : sun - 1;
-}
-
-function monthCells(monthStart: string): { iso: string; num: number; inMonth: boolean }[] {
-  const lead = mondayIndex(monthStart);
-  const start = addDays(monthStart, -lead);
-  const next = addMonths(monthStart, 1);
-  return Array.from({ length: 42 }, (_, i) => {
-    const iso = addDays(start, i);
-    return { iso, num: Number(iso.slice(8, 10)), inMonth: iso >= monthStart && iso < next };
-  });
-}
 
 function isoFrom(start: string, i: number): string {
   return addDays(start, i);
@@ -52,6 +36,11 @@ function aptTitle(p: Property): string {
 function aptMeta(p: Property): string {
   const price = p.basePrice > 0 ? formatKzt(p.basePrice) : 'нет цены';
   return `${price} · до ${p.maxGuests} гостей`;
+}
+
+function stayLabel(e: CalendarEvent): string {
+  if (e.kind === 'block') return (e.guestName || 'Блок').replace(/\s+/g, ' ').trim();
+  return (e.guestName || 'Бронь').replace(/\s+/g, ' ').trim();
 }
 
 function AptPicker({
@@ -495,7 +484,8 @@ export function CalendarView() {
               ))}
             </div>
             <div className="m-cal-grid">
-              {mCells.map((cell) => {
+              {mCells.map((cell, i) => {
+                const col = i % 7;
                 const b = mP
                   ? events.find(
                       (e) =>
@@ -507,17 +497,17 @@ export function CalendarView() {
                   : undefined;
                 const st = b ? eventStatus(b, today) : null;
                 const c = st ? ST[st] : null;
+                const last = b ? lastNight(b.end) : '';
+                const span = b && last ? staySpan(cell.iso, b.begin, last, col) : null;
+                const showName = span === 'start' || span === 'single';
+                const segLen = b && last && showName ? staySegLen(cell.iso, last, col) : 0;
                 const isToday = cell.iso === today;
                 return (
                   <button
                     key={cell.iso}
                     type="button"
-                    className={`m-cal-cell${cell.inMonth ? '' : ' out'}${isToday ? ' today' : ''}${c ? ' busy' : ''}`}
-                    style={
-                      c
-                        ? { background: c.bg, borderColor: c.bd, color: c.fg }
-                        : undefined
-                    }
+                    className={`m-cal-cell${cell.inMonth ? '' : ' out'}${isToday ? ' today' : ''}${c ? ' busy' : ''}${span ? ` span-${span}` : ''}`}
+                    style={c ? { color: c.fg } : undefined}
                     onClick={() => {
                       if (!mP) return;
                       if (b) {
@@ -539,9 +529,18 @@ export function CalendarView() {
                       }
                     }}
                   >
+                    <span
+                      className="m-cal-fill"
+                      style={c ? { background: c.bg, boxShadow: `inset 0 0 0 1px ${c.bd}` } : undefined}
+                    />
                     <span className="m-cal-num">{cell.num}</span>
-                    {b ? (
-                      <span className="m-cal-dot" style={{ background: c?.dot }} />
+                    {showName && b ? (
+                      <span
+                        className="m-cal-guest"
+                        style={{ width: `calc(${segLen} * 100% - 12px)` }}
+                      >
+                        {stayLabel(b)}
+                      </span>
                     ) : null}
                   </button>
                 );

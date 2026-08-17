@@ -23,6 +23,7 @@ import {
 import { useAuth } from '../lib/auth';
 import { ST } from '../lib/status';
 import { useUi } from '../lib/ui';
+import { DateField } from './DateField';
 
 /**
  * WhatsApp chat id for a typed phone: digits only, KZ "8…" normalized to "7…",
@@ -241,25 +242,14 @@ export function Drawer() {
           </label>
 
           <div className="date-row">
-            <label className="field" style={{ flex: 1 }}>
-              <span>Заезд</span>
-              <input
-                className="inp mono"
-                type="date"
-                value={checkIn}
-                onChange={(e) => setIn(e.target.value)}
-              />
-            </label>
-            <label className="field" style={{ flex: 1 }}>
-              <span>Выезд</span>
-              <input
-                className="inp mono"
-                type="date"
-                value={checkOut}
-                min={checkIn ? addDays(checkIn, 1) : undefined}
-                onChange={(e) => setOut(e.target.value)}
-              />
-            </label>
+            <DateField label="Заезд" value={checkIn} onChange={setIn} />
+            <DateField
+              label="Выезд"
+              value={checkOut}
+              onChange={setOut}
+              min={checkIn ? addDays(checkIn, 1) : undefined}
+              rangeFrom={checkIn || undefined}
+            />
           </div>
           <div className="nights-row">
             {([1, 2, 3, 7, 14] as const).map((n) => (
