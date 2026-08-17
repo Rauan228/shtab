@@ -433,6 +433,17 @@ export function markDialogSeen(token: string, chatId: string): Promise<{ ok: boo
   return req(`/dialogs/${encodeURIComponent(chatId)}/seen`, token, { method: 'POST' });
 }
 
+export function reportDialogError(
+  token: string,
+  chatId: string,
+  body: { messageId: string; messageText: string; note: string; at?: string },
+): Promise<{ ok: boolean }> {
+  return req(`/dialogs/${encodeURIComponent(chatId)}/report`, token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 /**
  * Renderable URL for a message's image.
  *

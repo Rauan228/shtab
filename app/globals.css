@@ -543,9 +543,23 @@ a:hover { color: var(--brand-hover); }
 
 .modal-wrap { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; }
 .modal {
-  position: relative; width: 380px; background: #fff; border-radius: 14px; padding: 20px;
+  position: relative; z-index: 1; width: 380px; background: #fff; border-radius: 14px; padding: 20px;
   box-shadow: 0 20px 50px oklch(0.2 0.01 250 / 0.25);
   animation: fadeUp 0.18s ease both;
+}
+.modal-lg { width: 460px; max-width: calc(100vw - 32px); }
+.rpt-quote {
+  margin-top: 12px;
+  max-height: 140px;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: oklch(0.97 0.008 180);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--fg);
 }
 .toast {
   position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
@@ -855,6 +869,32 @@ a:hover { color: var(--brand-hover); }
 }
 
 /* Bubbles extend the pair already used on the login preview. */
+.bbl-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 92%;
+}
+.bbl-row.out { align-self: flex-end; flex-direction: row; }
+.bbl-row.in { align-self: flex-start; }
+.bbl-row .bbl { max-width: 100%; }
+.bbl-flag {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: oklch(0.58 0.14 70);
+  opacity: 0.32;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+}
+.bbl-row:hover .bbl-flag,
+.bbl-flag:focus-visible { opacity: 1; }
+.bbl-flag:hover { background: oklch(0.96 0.04 75); }
+
 .dlg-feed .bbl {
   max-width: 82%;
   padding: 8px 11px;

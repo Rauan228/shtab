@@ -7,6 +7,7 @@ import {
   formatKzt,
   getDialog,
   markDialogSeen,
+  reportDialogError,
   type Channel,
   type DialogListItem,
   type DialogMessage,
@@ -78,7 +79,7 @@ export function DialogThread({
   onBack: () => void;
 }) {
   const { token } = useAuth();
-  const { openDrawer } = useUi();
+  const { openDrawer, flash, readOnly } = useUi();
 
   const [messages, setMessages] = useState<DialogMessage[] | null>(null);
   const [chat, setChat] = useState<{
@@ -90,6 +91,10 @@ export function DialogThread({
   } | null>(preloaded ? { ...preloaded } : null);
   const [err, setErr] = useState('');
   const [lightbox, setLightbox] = useState<{ items: string[]; index: number } | null>(null);
+  const [report, setReport] = useState<{ id: string; text: string; at: string } | null>(null);
+  const [reportNote, setReportNote] = useState('');
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportErr, setReportErr] = useState('');
 
   const scroller = useRef<HTMLDivElement | null>(null);
   /** Stick to the bottom only when the owner is already there (WhatsApp rule). */
@@ -246,6 +251,35 @@ export function DialogThread({
                   ) : m.role === 'system' ? (
                     m.text ? <div className="dlg-sys">{m.text}</div> : null
                   ) : (
+                    <div className={`bbl-row ${isGuest ? 'in' : 'out'}`}>
+                      {m.role === 'agent' && !readOnly ? (
+                        <button
+                          type="button"
+                          className="bbl-flag"
+                          title="Сообщить об ошибке"
+                          aria-label="Сообщить об ошибке"
+                          onClick={() => {
+                            const t =
+                              m.text?.trim() ||
+                              caption?.trim() ||
+                              (photos.length ? `фото ×${photos.length}` : '');
+                            setReport({ id: m.id, text: t, at: m.at });
+                            setReportNote('');
+                            setReportErr('');
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                            <path
+                              d="M8 1.6 14.6 13.2H1.4L8 1.6Z"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinejoin="round"
+                            />
+                            <path d="M8 6.2v3.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                            <circle cx="8" cy="11.3" r="0.7" fill="currentColor" />
+                          </svg>
+                        </button>
+                      ) : null}
                     <div
                       className={`bbl ${isGuest ? 'bbl-in' : 'bbl-out'}${
                         m.role === 'owner' ? ' bbl-owner' : ''
@@ -312,6 +346,7 @@ export function DialogThread({
 
                       <div className="bbl-t mono">{clock(m.at)}</div>
                     </div>
+                    </div>
                   )}
                 </Fragment>
               );
@@ -319,6 +354,69 @@ export function DialogThread({
           )}
         </div>
       </div>
+
+      {report ? (
+        <div className="modal-wrap">
+          <div className="scrim" onClick={() => !reportBusy && setReport(null)} />
+          <div className="modal modal-lg">
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Сообщить об ошибке</div>
+            <div style={{ fontSize: 13, color: 'oklch(0.5 0.012 250)', marginTop: 6, lineHeight: 1.45 }}>
+              Уйдёт в лог-группу AmanAI. Гость это не увидит.
+            </div>
+            <div className="rpt-quote">{report.text || '— пустое сообщение —'}</div>
+            <label className="field" style={{ marginTop: 12 }}>
+              <span>В чём ошибка</span>
+              <textarea
+                value={reportNote}
+                onChange={(e) => setReportNote(e.target.value)}
+                placeholder="Например: назвал не ту цену, предложил занятую квартиру…"
+                rows={4}
+                autoFocus
+              />
+            </label>
+            {reportErr ? (
+              <div className="err-box" style={{ marginTop: 10 }}>
+                <span className="err-dot" />
+                {reportErr}
+              </div>
+            ) : null}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn" type="button" disabled={reportBusy} onClick={() => setReport(null)}>
+                Отмена
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                disabled={reportBusy}
+                onClick={() => {
+                  if (!token) return;
+                  const note = reportNote.trim();
+                  if (note.length < 3) {
+                    setReportErr('Напишите, в чём ошибка');
+                    return;
+                  }
+                  setReportBusy(true);
+                  setReportErr('');
+                  void reportDialogError(token, chatId, {
+                    messageId: report.id,
+                    messageText: report.text,
+                    note,
+                    at: report.at,
+                  })
+                    .then(() => {
+                      setReport(null);
+                      flash('Отправили в лог-группу');
+                    })
+                    .catch((e) => setReportErr(e instanceof Error ? e.message : 'Не отправилось'))
+                    .finally(() => setReportBusy(false));
+                }}
+              >
+                {reportBusy ? 'Отправляю…' : 'Отправить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {lightbox ? (
         <div className="lb" onClick={() => setLightbox(null)} role="presentation">
