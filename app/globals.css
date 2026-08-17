@@ -922,6 +922,22 @@ a:hover { color: var(--brand-hover); }
 }
 .bbl-owner { background: #fff; border: 1px solid var(--border-2); color: var(--fg); }
 .bbl-tx { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bbl-quote {
+  border-left: 2px solid var(--brand-mid);
+  padding: 4px 8px;
+  margin: 0 0 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--fg-2);
+  background: rgb(255 255 255 / 0.55);
+  border-radius: 0 7px 7px 0;
+  max-height: 3.9em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.bbl-in .bbl-quote { background: rgb(18 127 134 / 0.08); }
 .bbl-cap { font-size: 12px; font-weight: 500; }
 .bbl-link { color: var(--brand); text-decoration: underline; overflow-wrap: anywhere; }
 .bbl-out .bbl-link { color: var(--brand-deep); }

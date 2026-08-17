@@ -42,6 +42,14 @@ function dayKey(iso: string): string {
 }
 
 const URL_RE = /(https?:\/\/[^\s<>"']+)/g;
+const REPLY_WRAP = /^\[в ответ на ваше сообщение: «([\s\S]*?)»\]\n?/;
+
+function splitReply(text?: string, quoted?: string): { quote?: string; body: string } {
+  const raw = text ?? '';
+  const m = raw.match(REPLY_WRAP);
+  if (m) return { quote: quoted || m[1], body: raw.slice(m[0].length) };
+  return { quote: quoted, body: raw };
+}
 
 /** Render text with clickable links. WhatsApp `*bold*` is left as the guest saw it. */
 function withLinks(text: string) {
@@ -315,23 +323,31 @@ export function DialogThread({
                       ) : null}
 
                       {(() => {
-                        const t = m.text?.trim();
-                        if (!t) return null;
+                        const { quote, body: rawBody } = splitReply(m.text, m.quotedText);
+                        const t = rawBody.trim();
+                        const quoteEl = quote ? <div className="bbl-quote">{quote}</div> : null;
+                        if (!t) return quoteEl;
                         // Don't repeat the caption above its own photos, and
                         // don't print the raw URL above the payment card that
                         // already shows it.
-                        if (photos.length > 0 && t === caption?.trim()) return null;
+                        if (photos.length > 0 && t === caption?.trim()) return quoteEl;
                         // Inbound photos arrive as "[гость прислал фото] <caption>";
                         // the caption is already shown above the image.
                         if (photos.length > 0 && caption) {
                           const stripped = t.replace(/^\[.*?\]\s*/, '').trim();
-                          if (stripped === caption.trim()) return null;
+                          if (stripped === caption.trim()) return quoteEl;
                         }
                         const body =
                           m.meta?.type === 'pay_link' && m.meta.url
                             ? t.replace(m.meta.url, '').replace(/[\s:—-]+$/, '').trim()
                             : t;
-                        return body ? <div className="bbl-tx">{withLinks(body)}</div> : null;
+                        if (!body) return quoteEl;
+                        return (
+                          <>
+                            {quoteEl}
+                            <div className="bbl-tx">{withLinks(body)}</div>
+                          </>
+                        );
                       })()}
 
                       {m.meta?.type === 'pay_link' ? <PayCard meta={m.meta} /> : null}

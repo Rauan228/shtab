@@ -352,6 +352,8 @@ export interface DialogMessage {
   at: string;
   role: DialogRole;
   text?: string;
+  /** Guest replied to this prior bubble. */
+  quotedText?: string;
   media?: {
     kind: 'photo' | 'album';
     items: DialogMediaItem[];
