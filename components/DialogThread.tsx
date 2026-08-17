@@ -6,8 +6,10 @@ import {
   formatDateRu,
   formatKzt,
   getDialog,
+  holdDialog,
   markDialogSeen,
   reportDialogError,
+  sendDialogMessage,
   type Channel,
   type DialogListItem,
   type DialogMessage,
@@ -17,7 +19,7 @@ import { useUi } from '../lib/ui';
 import { dialogTitle } from './Dialogs';
 import { AlertIcon } from './icons';
 
-const POLL_MS = 4000;
+const POLL_MS = 6000;
 
 /** Clock inside a bubble — always Almaty, so it matches the guest's WhatsApp. */
 function clock(iso: string): string {
@@ -96,8 +98,12 @@ export function DialogThread({
     guestName?: string;
     guestUsername?: string;
     guestPhone: string;
+    botHeld?: boolean;
     booking?: DialogListItem['booking'];
   } | null>(preloaded ? { ...preloaded } : null);
+  const [draft, setDraft] = useState('');
+  const [sendBusy, setSendBusy] = useState(false);
+  const [holdBusy, setHoldBusy] = useState(false);
   const [err, setErr] = useState('');
   const [lightbox, setLightbox] = useState<{ items: string[]; index: number } | null>(null);
   const [report, setReport] = useState<{ id: string; text: string; at: string } | null>(null);
@@ -213,6 +219,28 @@ export function DialogThread({
             Открыть бронь
           </button>
         ) : null}
+        {!readOnly && (
+          <button
+            type="button"
+            className={`btn btn-xs${chat?.botHeld ? ' btn-primary' : ''}`}
+            disabled={holdBusy}
+            onClick={() => {
+              if (!token) return;
+              setHoldBusy(true);
+              const next = !chat?.botHeld;
+              void holdDialog(token, chatId, next)
+                .then((r) => {
+                  setChat((c) => (c ? { ...c, botHeld: r.botHeld } : c));
+                  flash(r.botHeld ? 'Чат у вас — бот молчит' : 'Бот снова отвечает');
+                  void load(true);
+                })
+                .catch((e) => flash(e instanceof Error ? e.message : 'Не вышло'))
+                .finally(() => setHoldBusy(false));
+            }}
+          >
+            {chat?.botHeld ? 'Вернуть боту' : 'Перехватить'}
+          </button>
+        )}
       </header>
 
       {err && (
@@ -362,6 +390,37 @@ export function DialogThread({
           )}
         </div>
       </div>
+
+      {!readOnly && chat?.botHeld ? (
+        <form
+          className="dlg-compose"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!token || !draft.trim() || sendBusy) return;
+            const text = draft.trim();
+            setSendBusy(true);
+            void sendDialogMessage(token, chatId, text)
+              .then(() => {
+                setDraft('');
+                void load(true);
+              })
+              .catch((e) => flash(e instanceof Error ? e.message : 'Не отправилось'))
+              .finally(() => setSendBusy(false));
+          }}
+        >
+          <input
+            className="inp"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Сообщение гостю…"
+          />
+          <button className="btn btn-primary" type="submit" disabled={sendBusy || !draft.trim()}>
+            Отправить
+          </button>
+        </form>
+      ) : !readOnly ? (
+        <div className="dlg-compose-hint">Перехватите чат, чтобы писать гостю самому — бот замолчит.</div>
+      ) : null}
 
       {report ? (
         <div className="modal-wrap">

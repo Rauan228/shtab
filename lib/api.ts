@@ -241,6 +241,71 @@ export function getCalendar(token: string, from: string, to: string): Promise<Ca
   );
 }
 
+export interface DateRate {
+  from: string;
+  to: string;
+  nightly?: number;
+  minNights?: number;
+  closed?: boolean;
+}
+
+export function getDateRates(token: string, propertyId: string): Promise<{ rates: DateRate[] }> {
+  return req(`/apartments/${propertyId}/rates`, token);
+}
+
+export function saveDateRates(
+  token: string,
+  propertyId: string,
+  rates: DateRate[],
+): Promise<{ ok: boolean; rates: DateRate[] }> {
+  invalidateAdminCache();
+  return req(`/apartments/${propertyId}/rates`, token, {
+    method: 'PUT',
+    body: JSON.stringify({ rates }),
+  });
+}
+
+export interface ReportDay {
+  iso: string;
+  occupied: number;
+  sellable: number;
+  revenue: number;
+  arrivals: number;
+  departures: number;
+}
+
+export interface ReportPayload {
+  from: string;
+  to: string;
+  occupancyPct: number;
+  revenue: number;
+  adr: number;
+  revpar: number;
+  bookings: number;
+  cancelled: number;
+  noShow: number;
+  avgCheck: number;
+  avgNights: number;
+  sources: { id: 'agent' | 'manual'; label: string; count: number; revenue: number }[];
+  days: ReportDay[];
+  rows: {
+    id: string;
+    propertyTitle: string;
+    guestName: string;
+    checkIn: string;
+    checkOut: string;
+    nights: number;
+    totalPrice: number;
+    status: string;
+    source: string;
+    kind: 'stay' | 'cancel' | 'noshow';
+  }[];
+}
+
+export function getReport(token: string, from: string, to: string): Promise<{ report: ReportPayload }> {
+  return req(`/reports?from=${from}&to=${to}`, token);
+}
+
 export function getQuote(
   token: string,
   q: { propertyId: string; checkIn: string; checkOut: string; guests: number },
@@ -431,6 +496,7 @@ export interface DialogListItem {
   lastAt: string;
   lastPreview: string;
   unread: boolean;
+  botHeld?: boolean;
   booking?: DialogBookingBrief;
 }
 
@@ -446,7 +512,6 @@ export function listDialogs(
   if (opts.channel) p.set('channel', opts.channel);
   const qs = p.toString();
   const load = () => req<{ dialogs: DialogListItem[] }>(`/dialogs${qs ? `?${qs}` : ''}`, token);
-  if (!qs) return cachedGet(`dlg:${token.slice(-8)}`, GET_TTL, load);
   return load();
 }
 
@@ -460,6 +525,7 @@ export function getDialog(
     guestName?: string;
     guestUsername?: string;
     guestPhone: string;
+    botHeld?: boolean;
     booking?: DialogBookingBrief;
   };
   messages: DialogMessage[];
@@ -468,7 +534,28 @@ export function getDialog(
 }
 
 export function markDialogSeen(token: string, chatId: string): Promise<{ ok: boolean }> {
+  invalidateAdminCache();
   return req(`/dialogs/${encodeURIComponent(chatId)}/seen`, token, { method: 'POST' });
+}
+
+export function holdDialog(
+  token: string,
+  chatId: string,
+  held: boolean,
+): Promise<{ ok: boolean; botHeld: boolean }> {
+  invalidateAdminCache();
+  return req(`/dialogs/${encodeURIComponent(chatId)}/hold`, token, {
+    method: 'POST',
+    body: JSON.stringify({ held }),
+  });
+}
+
+export function sendDialogMessage(token: string, chatId: string, text: string): Promise<{ ok: boolean }> {
+  invalidateAdminCache();
+  return req(`/dialogs/${encodeURIComponent(chatId)}/messages`, token, {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
 }
 
 export function reportDialogError(

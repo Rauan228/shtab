@@ -12,6 +12,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   CardIcon,
+  ChartIcon,
   ChatIcon,
   LayoutIcon,
   LogoutIcon,
@@ -68,12 +69,16 @@ export function Shell({ children }: { children: ReactNode }) {
         setPending(r.events.filter((e) => e.kind === 'booking' && e.status === 'pending').length);
       })
       .catch(() => {});
-    listDialogs(token)
-      .then((r) => {
-        setUnread(r.dialogs.filter((d) => d.unread).length);
-        setLiveChats(r.dialogs.length);
-      })
-      .catch(() => {});
+    const pullDialogs = () =>
+      listDialogs(token)
+        .then((r) => {
+          setUnread(r.dialogs.filter((d) => d.unread).length);
+          setLiveChats(r.dialogs.length);
+        })
+        .catch(() => {});
+    void pullDialogs();
+    const late = logical.startsWith('/dialogs/') ? window.setTimeout(() => void pullDialogs(), 600) : 0;
+    return () => window.clearTimeout(late);
   }, [token, path, reloadTick]);
 
   const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
@@ -82,6 +87,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const isDlg = logical.startsWith('/dialogs');
   const isSet = logical.startsWith('/settings');
   const isPlan = logical.startsWith('/plan');
+  const isRep = logical.startsWith('/reports');
   const isDs = logical.startsWith('/ds');
   const isCard = /\/(objects|apartments)\/.+/.test(logical);
 
@@ -89,6 +95,8 @@ export function Shell({ children }: { children: ReactNode }) {
     ? 'Сегодня'
     : isDlg
       ? 'Диалоги'
+      : isRep
+      ? 'Отчёты'
       : isCal
       ? 'Календарь занятости'
       : isCard
@@ -146,6 +154,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {nav('/today', <LayoutIcon />, 'Сегодня', isToday, pending)}
           {nav('/dialogs', <ChatIcon />, 'Диалоги', isDlg, unread)}
           {nav('/calendar', <CalendarIcon />, 'Календарь', isCal)}
+          {nav('/reports', <ChartIcon />, 'Отчёты', isRep)}
           {nav('/objects', <BuildingIcon />, 'Объекты', isObj)}
           {nav('/plan', <CardIcon />, 'Тариф', isPlan)}
         </div>
@@ -240,7 +249,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </span>
           Календарь
         </Link>
-        <Link href={href('/settings')} className={isSet || isObj ? 'on' : ''}>
+        <Link href={href('/settings')} className={isSet || isObj || isRep ? 'on' : ''}>
           <span className="ic">
             <SettingsIcon size={18} />
           </span>

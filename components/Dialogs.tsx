@@ -15,7 +15,7 @@ import { useUi } from '../lib/ui';
 import { DialogThread } from './DialogThread';
 
 /** How often the open tab re-reads the server. Matches §3.5 of the spec. */
-const POLL_MS = 4000;
+const POLL_MS = 8000;
 
 const FILTERS: { id: DialogFilter; label: string }[] = [
   { id: 'all', label: 'Все' },
@@ -127,13 +127,20 @@ export function Dialogs({ chatId }: { chatId?: string }) {
 
   useEffect(() => {
     void load(false);
-  }, [load, filter]);
+  }, [load, filter, channel]);
 
   // Debounce search: one request after typing settles, not one per keystroke.
   useEffect(() => {
     const t = window.setTimeout(() => void load(false), 250);
     return () => window.clearTimeout(t);
   }, [q, load]);
+
+  useEffect(() => {
+    if (!chatId) return;
+    setItems((list) =>
+      list ? list.map((d) => (d.chatId === chatId && d.unread ? { ...d, unread: false } : d)) : list,
+    );
+  }, [chatId]);
 
   useEffect(() => {
     const tick = () => {

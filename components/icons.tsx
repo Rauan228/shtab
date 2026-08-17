@@ -228,3 +228,10 @@ export const BanIcon = ({ size = 16, className }: Props) => (
     <path d="m4.9 4.9 14.2 14.2" />
   </svg>
 );
+
+export const ChartIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M3 3v18h18" />
+    <path d="M7 14v4M12 9v9M17 5v13" />
+  </svg>
+);

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getPayout, savePayout, type PayoutMethod } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
-import { BuildingIcon, CardIcon, ChevronRight } from './icons';
+import { BuildingIcon, CardIcon, ChartIcon, ChevronRight } from './icons';
 
 export function Settings() {
   const { href, flash, readOnly } = useUi();
@@ -53,6 +53,18 @@ export function Settings() {
 
   return (
     <div className="set">
+      <Link href={href('/reports')} className="card card-pad more-row">
+        <span className="more-ic">
+          <ChartIcon />
+        </span>
+        <span>
+          <div className="more-t">Отчёты</div>
+          <div className="more-s">Загрузка, доход, отмены и откуда пришла бронь</div>
+        </span>
+        <span className="more-go">
+          <ChevronRight />
+        </span>
+      </Link>
       <Link href={href('/objects')} className="card card-pad more-row">
         <span className="more-ic">
           <BuildingIcon />

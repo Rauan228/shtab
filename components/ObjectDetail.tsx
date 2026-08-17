@@ -6,8 +6,11 @@ import {
   deleteApartment,
   deleteApartmentPhoto,
   getApartment,
+  getDateRates,
   listApartmentPhotos,
   saveApartment,
+  saveDateRates,
+  type DateRate,
   uploadApartmentPhoto,
   type ApartmentInfo,
   type ApartmentPhoto,
@@ -25,18 +28,20 @@ export function ObjectDetail({ id }: { id: string }) {
   const [rules, setRules] = useState<PropertyRules | null>(null);
   const [info, setInfo] = useState<ApartmentInfo | null>(null);
   const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
+  const [rates, setRates] = useState<DateRate[]>([]);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     if (!token || !id) return;
-    Promise.all([getApartment(token, id), listApartmentPhotos(token, id)])
-      .then(([a, ph]) => {
+    Promise.all([getApartment(token, id), listApartmentPhotos(token, id), getDateRates(token, id)])
+      .then(([a, ph, rt]) => {
         setProperty(a.property);
         setRules(a.rules);
         setInfo(a.info ?? { id });
         setPhotos(ph.photos);
+        setRates(rt.rates);
       })
       .catch((e) => setErr(e instanceof Error ? e.message : 'Не удалось загрузить'));
   }, [token, id]);
@@ -75,6 +80,7 @@ export function ObjectDetail({ id }: { id: string }) {
     setBusy(true);
     try {
       await saveApartment(token, id, { property, rules, info });
+      await saveDateRates(token, id, rates);
       setDirty(false);
       flash('Объект сохранён — бот уже видит эти данные');
     } catch (e) {
@@ -249,6 +255,109 @@ export function ObjectDetail({ id }: { id: string }) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+        <div className="sec-h">
+          <span className="sec-n">02б</span>Цены по датам
+        </div>
+        <div style={{ fontSize: 12, color: 'oklch(0.55 0.012 250)', lineHeight: 1.45 }}>
+          Праздники, Наурыз, Новый год: своя цена, минимум ночей или закрыть продажу. Выезд — день после последней ночи.
+        </div>
+        {rates.map((r, i) => (
+          <div key={i} className="date-row" style={{ alignItems: 'end' }}>
+            <label className="field" style={{ flex: 1 }}>
+              <span>С</span>
+              <input
+                className="inp mono"
+                type="date"
+                value={r.from}
+                onChange={(e) => {
+                  const next = rates.slice();
+                  next[i] = { ...r, from: e.target.value };
+                  setRates(next);
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <label className="field" style={{ flex: 1 }}>
+              <span>До (не включая)</span>
+              <input
+                className="inp mono"
+                type="date"
+                value={r.to}
+                onChange={(e) => {
+                  const next = rates.slice();
+                  next[i] = { ...r, to: e.target.value };
+                  setRates(next);
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <label className="field" style={{ width: 110 }}>
+              <span>₸/ночь</span>
+              <input
+                className="inp mono"
+                type="number"
+                value={r.nightly ?? ''}
+                placeholder="база"
+                onChange={(e) => {
+                  const next = rates.slice();
+                  next[i] = { ...r, nightly: Number(e.target.value) || undefined };
+                  setRates(next);
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <label className="field" style={{ width: 80 }}>
+              <span>Мин. н.</span>
+              <input
+                className="inp mono"
+                type="number"
+                value={r.minNights ?? ''}
+                onChange={(e) => {
+                  const next = rates.slice();
+                  next[i] = { ...r, minNights: Number(e.target.value) || undefined };
+                  setRates(next);
+                  setDirty(true);
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              className={`btn btn-xs${r.closed ? ' btn-danger' : ''}`}
+              onClick={() => {
+                const next = rates.slice();
+                next[i] = { ...r, closed: !r.closed };
+                setRates(next);
+                setDirty(true);
+              }}
+            >
+              {r.closed ? 'закрыто' : 'открыто'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-xs"
+              onClick={() => {
+                setRates(rates.filter((_, j) => j !== i));
+                setDirty(true);
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="btn btn-xs"
+          style={{ alignSelf: 'flex-start' }}
+          onClick={() => {
+            setRates([...rates, { from: '', to: '', nightly: property.basePrice }]);
+            setDirty(true);
+          }}
+        >
+          + Период
+        </button>
       </div>
 
       <div className="g2">
