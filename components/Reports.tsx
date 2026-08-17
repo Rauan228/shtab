@@ -18,22 +18,14 @@ import {
 } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
+import { downloadReportExcel } from '../lib/report-excel';
 import { DateField } from './DateField';
 
-function downloadCsv(report: TypedReport) {
-  const esc = (c: string) => {
-    const s = String(c ?? '');
-    return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const lines = [[report.title], [`${report.from} — ${report.to}`], [], ...report.rows].map((r) =>
-    r.map(esc).join(';'),
-  );
-  const blob = new Blob([`\uFEFF${lines.join('\n')}\n`], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${report.type}-${report.from}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+function prettyReportCell(s: string): string {
+  return String(s ?? '').replace(/\d{4}-\d{2}-\d{2}/g, (iso) => {
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+  });
 }
 
 export function Reports() {
@@ -161,9 +153,9 @@ export function Reports() {
               type="button"
               className="btn"
               disabled={!data}
-              onClick={() => data && downloadCsv(data)}
+              onClick={() => data && downloadReportExcel(data)}
             >
-              Excel (CSV)
+              Скачать Excel
             </button>
             {!readOnly && (
               <button
@@ -237,7 +229,7 @@ export function Reports() {
                   {body.map((r, i) => (
                     <tr key={i}>
                       {r.map((c, j) => (
-                        <td key={j}>{c}</td>
+                        <td key={j}>{prettyReportCell(c)}</td>
                       ))}
                     </tr>
                   ))}
@@ -286,7 +278,7 @@ export function Reports() {
                   className="btn btn-xs"
                   onClick={() => {
                     if (!token) return;
-                    getReportRun(token, r.id).then((x) => downloadCsv(x.run.payload));
+                    getReportRun(token, r.id).then((x) => downloadReportExcel(x.run.payload));
                   }}
                 >
                   Excel
