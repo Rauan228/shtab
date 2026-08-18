@@ -122,7 +122,7 @@ export function OpsClients() {
               <th>Тариф</th>
               <th>Объекты</th>
               <th>Диалоги</th>
-              <th>WhatsApp</th>
+              <th>Каналы</th>
               <th>Статус</th>
             </tr>
           </thead>
@@ -141,14 +141,28 @@ export function OpsClients() {
                 <td className="mono">
                   {r.dialogs.used}/{r.dialogs.max}
                 </td>
-                <td>
-                  {r.whatsapp?.connected
-                    ? r.whatsapp.phone
-                      ? `+${r.whatsapp.phone}`
-                      : r.whatsapp.authorized
-                        ? 'подключён'
-                        : 'QR'
-                    : '—'}
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  {r.whatsapp?.connected && (
+                    <span
+                      className="ch-chip ch-whatsapp"
+                      title={r.whatsapp.phone ? `+${r.whatsapp.phone}` : 'подключён'}
+                      style={r.whatsapp.authorized === false ? { opacity: 0.55 } : undefined}
+                    >
+                      {r.whatsapp.authorized === false ? 'QR' : 'WA'}
+                    </span>
+                  )}
+                  {r.telegram?.connected && (
+                    <span
+                      className="ch-chip ch-telegram"
+                      title={r.telegram.username ? `@${r.telegram.username}` : 'подключён'}
+                      style={{ marginLeft: 4 }}
+                    >
+                      TG
+                    </span>
+                  )}
+                  {!r.whatsapp?.connected && !r.telegram?.connected && (
+                    <span style={{ color: 'oklch(0.55 0.16 25)', fontSize: 12 }}>нет</span>
+                  )}
                 </td>
                 <td>{r.status}</td>
               </tr>

@@ -71,12 +71,42 @@ export async function opsLogin(
   return 'ok';
 }
 
+/** Something on a client needs a human — ordered most urgent first. */
+export type AttentionKind = 'no_channel' | 'wa_down' | 'limit_hit' | 'limit_near' | 'quiet';
+
+export interface AttentionRow {
+  orgId: string;
+  name: string;
+  kind: AttentionKind;
+  text: string;
+}
+
+/** Per-client line for the summary table, including unit economics. */
+export interface OpsClientRow {
+  orgId: string;
+  name: string;
+  plan: string;
+  planName: string;
+  priceKzt: number;
+  dialogs: { used: number; max: number; pct: number };
+  properties: number;
+  channels: { whatsapp: boolean; telegram: boolean };
+  cogsKzt: number;
+  marginKzt: number;
+  today: number;
+  week: number;
+  quietDays: number | null;
+}
+
 export interface OpsOverview {
   period: string;
   clients: number;
+  suspended: number;
   byPlan: Record<string, number>;
   apartments: number;
   dialogs: number;
+  channels: { whatsapp: number; telegram: number; none: number };
+  activity: { dialogsToday: number; dialogsWeek: number };
   money: {
     mrr: number;
     greenApiKzt: number;
@@ -84,6 +114,8 @@ export interface OpsOverview {
     cogsEstKzt: number;
     marginEstKzt: number;
   };
+  attention: AttentionRow[];
+  clientRows: OpsClientRow[];
   notes: { wavespeed: string; greenApi: string; llmPerDialog: string };
 }
 
@@ -101,6 +133,14 @@ export interface PublicWhatsapp {
   checkedAt?: string;
 }
 
+export interface PublicTelegram {
+  connected: boolean;
+  username?: string;
+  phone?: string;
+  label?: string;
+  checkedAt?: string;
+}
+
 export interface OpsOrgRow {
   id: string;
   name: string;
@@ -111,6 +151,7 @@ export interface OpsOrgRow {
   properties: { used: number; max: number };
   dialogs: { used: number; max: number };
   whatsapp?: PublicWhatsapp;
+  telegram?: PublicTelegram;
 }
 
 export function listOpsOrgs(token: string): Promise<{ orgs: OpsOrgRow[] }> {
@@ -137,6 +178,7 @@ export interface OpsOrgDetail {
     features: Record<string, unknown>;
     notes: string;
     whatsapp?: PublicWhatsapp;
+    telegram?: PublicTelegram;
   };
   usage: {
     properties: { used: number; max: number };
@@ -173,4 +215,56 @@ export function checkOpsWhatsapp(
 
 export function unbindOpsWhatsapp(token: string, id: string): Promise<{ ok: boolean; whatsapp: PublicWhatsapp }> {
   return req(`/orgs/${id}/whatsapp`, token, { method: 'DELETE' });
+}
+
+// --- Telegram: browser login wizard ---
+
+/**
+ * Step 1 — Telegram sends a login code to the client's phone. Returns a ticket
+ * that ties the follow-up steps to the same half-open MTProto connection.
+ */
+export function startOpsTelegram(
+  token: string,
+  id: string,
+  body: { phone: string },
+): Promise<{ ok: boolean; ticket: string; phone: string }> {
+  return req(`/orgs/${id}/telegram/start`, token, { method: 'POST', body: JSON.stringify(body) });
+}
+
+/**
+ * Step 2/3 — submit the code, then the 2FA password if Telegram asks. Sending a
+ * `password` continues the same ticket rather than starting over.
+ */
+export function confirmOpsTelegram(
+  token: string,
+  id: string,
+  body: { ticket: string; code?: string; password?: string; label?: string },
+): Promise<{ ok: boolean; needsPassword?: boolean; live?: boolean; telegram?: PublicTelegram }> {
+  return req(`/orgs/${id}/telegram/confirm`, token, { method: 'POST', body: JSON.stringify(body) });
+}
+
+export function unbindOpsTelegram(token: string, id: string): Promise<{ ok: boolean; telegram: PublicTelegram }> {
+  return req(`/orgs/${id}/telegram`, token, { method: 'DELETE' });
+}
+
+// --- plan / dialog packs / status ---
+
+/** Change plan, sell a dialog pack (`addDialogs`), suspend, or edit notes. */
+export function patchOpsOrg(
+  token: string,
+  id: string,
+  body: { plan?: string; addDialogs?: number; status?: string; notes?: string },
+): Promise<{
+  ok: boolean;
+  org: {
+    id: string;
+    plan: string;
+    planName: string;
+    priceKzt: number;
+    status: string;
+    limits: { maxProperties: number; maxDialogs: number; extraDialogs: number };
+    notes: string;
+  };
+}> {
+  return req(`/orgs/${id}`, token, { method: 'PATCH', body: JSON.stringify(body) });
 }

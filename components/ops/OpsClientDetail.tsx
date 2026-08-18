@@ -8,9 +8,12 @@ import {
   getOpsOrg,
   unbindOpsWhatsapp,
   type OpsOrgDetail,
+  type PublicTelegram,
   type PublicWhatsapp,
 } from '../../lib/ops-api';
 import { useOpsAuth } from '../../lib/ops-auth';
+import { TelegramConnect } from './TelegramConnect';
+import { PlanControls } from './PlanControls';
 
 export function OpsClientDetail({ id }: { id: string }) {
   const { token } = useOpsAuth();
@@ -38,6 +41,7 @@ export function OpsClientDetail({ id }: { id: string }) {
 
   const o = data.org;
   const wa: PublicWhatsapp = o.whatsapp ?? { connected: false };
+  const tg: PublicTelegram = o.telegram ?? { connected: false };
 
   const bind = async () => {
     if (!token) return;
@@ -234,6 +238,22 @@ export function OpsClientDetail({ id }: { id: string }) {
           </div>
         )}
       </div>
+
+      <TelegramConnect
+        orgId={id}
+        token={token ?? ''}
+        telegram={tg}
+        onChanged={load}
+      />
+
+      <PlanControls
+        orgId={id}
+        token={token ?? ''}
+        plan={o.plan}
+        status={o.status}
+        extraDialogs={o.limits.extraDialogs}
+        onChanged={load}
+      />
 
       <div className="card card-pad">
         <div style={{ fontSize: 13, fontWeight: 600 }}>Квартиры клиента</div>
