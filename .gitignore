@@ -5,3 +5,6 @@ out
 .env.local
 *.log
 tsconfig.tsbuildinfo
+
+# Exported report spreadsheets (runtime output)
+tmp-xlsx/

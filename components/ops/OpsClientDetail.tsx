@@ -6,6 +6,7 @@ import {
   bindOpsWhatsapp,
   checkOpsWhatsapp,
   getOpsOrg,
+  setOpsFeatures,
   unbindOpsWhatsapp,
   type OpsOrgDetail,
   type PublicTelegram,
@@ -82,6 +83,20 @@ export function OpsClientDetail({ id }: { id: string }) {
       load();
     } catch (e) {
       setWaErr(e instanceof Error ? e.message : 'проверка не прошла');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleIntegrations = async (on: boolean) => {
+    if (!token) return;
+    setBusy(true);
+    setErr('');
+    try {
+      await setOpsFeatures(token, id, { integrations: on });
+      load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'не сохранилось');
     } finally {
       setBusy(false);
     }
@@ -254,6 +269,25 @@ export function OpsClientDetail({ id }: { id: string }) {
         extraDialogs={o.limits.extraDialogs}
         onChanged={load}
       />
+
+      <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Интеграции</div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={o.features?.integrations === true}
+            disabled={busy}
+            onChange={(e) => void toggleIntegrations(e.target.checked)}
+          />
+          <span>
+            Показать клиенту раздел «Интеграции» (импорт броней из Booking.com)
+          </span>
+        </label>
+        <div style={{ fontSize: 11, color: 'oklch(0.55 0.012 250)', lineHeight: 1.5 }}>
+          Пока выключено — в кабинете клиента раздела нет. Включайте только после того, как договорились
+          о подключении Booking.
+        </div>
+      </div>
 
       <div className="card card-pad">
         <div style={{ fontSize: 13, fontWeight: 600 }}>Квартиры клиента</div>

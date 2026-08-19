@@ -247,6 +247,20 @@ export function unbindOpsTelegram(token: string, id: string): Promise<{ ok: bool
   return req(`/orgs/${id}/telegram`, token, { method: 'DELETE' });
 }
 
+// --- feature flags (the manual gate for hand-onboarded features) ---
+
+/**
+ * Flip a client's feature flags. Right now the one that matters is
+ * `integrations`, which reveals the Booking connect wizard in their cabinet.
+ */
+export function setOpsFeatures(
+  token: string,
+  id: string,
+  features: Partial<Record<'integrations' | 'kaspi_pay' | 'cloud_api' | 'instagram' | 'extra_seats', boolean>>,
+): Promise<{ ok: boolean; features: Record<string, boolean> }> {
+  return req(`/orgs/${id}/features`, token, { method: 'PATCH', body: JSON.stringify({ features }) });
+}
+
 // --- plan / dialog packs / status ---
 
 /** Change plan, sell a dialog pack (`addDialogs`), suspend, or edit notes. */

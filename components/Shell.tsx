@@ -4,7 +4,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
-import { addDays, cabinetCalendarWindow, getCalendar, listDialogs, todayIso } from '../lib/api';
+import {
+  addDays,
+  cabinetCalendarWindow,
+  getCalendar,
+  getSubscription,
+  listDialogs,
+  todayIso,
+} from '../lib/api';
 import { useTheme } from '../lib/theme';
 import { useUi } from '../lib/ui';
 import { BrandMark, Wordmark } from './BrandMark';
@@ -16,6 +23,7 @@ import {
   ChartIcon,
   ChatIcon,
   LayoutIcon,
+  LinkIcon,
   LogoutIcon,
   MenuIcon,
   MoonIcon,
@@ -44,6 +52,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [objCount, setObjCount] = useState(0);
   const [unread, setUnread] = useState(0);
   const [liveChats, setLiveChats] = useState(0);
+  const [hasIntegrations, setHasIntegrations] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
@@ -80,6 +89,9 @@ export function Shell({ children }: { children: ReactNode }) {
         })
         .catch(() => {});
     void pullDialogs();
+    getSubscription(token)
+      .then((s) => setHasIntegrations(Boolean(s.integrations)))
+      .catch(() => {});
   }, [token, reloadTick]);
 
   const isObj = logical.startsWith('/objects') || logical.startsWith('/apartments');
@@ -89,12 +101,15 @@ export function Shell({ children }: { children: ReactNode }) {
   const isSet = logical.startsWith('/settings');
   const isPlan = logical.startsWith('/plan');
   const isRep = logical.startsWith('/reports');
+  const isInt = logical.startsWith('/integrations');
   const isCard = /\/(objects|apartments)\/.+/.test(logical);
 
   const title = isToday
     ? 'Сегодня'
     : isDlg
       ? 'Диалоги'
+      : isInt
+      ? 'Интеграции'
       : isRep
       ? 'Отчёты'
       : isCal
@@ -154,6 +169,7 @@ export function Shell({ children }: { children: ReactNode }) {
           {nav('/calendar', <CalendarIcon />, 'Календарь', isCal)}
           {nav('/reports', <ChartIcon />, 'Отчёты', isRep)}
           {nav('/objects', <BuildingIcon />, 'Объекты', isObj)}
+          {hasIntegrations && nav('/integrations', <LinkIcon />, 'Интеграции', isInt)}
           {nav('/plan', <CardIcon />, 'Тариф', isPlan)}
         </div>
         <div className="nav-sep" />
@@ -244,7 +260,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </span>
           Календарь
         </Link>
-        <Link href={href('/settings')} className={isSet || isObj || isRep ? 'on' : ''}>
+        <Link href={href('/settings')} className={isSet || isObj || isRep || isInt ? 'on' : ''}>
           <span className="ic">
             <SettingsIcon size={18} />
           </span>
