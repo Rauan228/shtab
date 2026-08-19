@@ -15,7 +15,7 @@ export function OpsClients() {
     name: '',
     email: '',
     password: '',
-    plan: 'start',
+    plan: 'trial',
     ownerName: '',
   });
 
@@ -44,7 +44,7 @@ export function OpsClients() {
         ...(form.ownerName ? { ownerName: form.ownerName } : {}),
       });
       setOpen(false);
-      setForm({ name: '', email: '', password: '', plan: 'start', ownerName: '' });
+      setForm({ name: '', email: '', password: '', plan: 'trial', ownerName: '' });
       load();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'не создалось');
@@ -72,6 +72,8 @@ export function OpsClients() {
             <label className="field">
               <span>Тариф</span>
               <select className="inp" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })}>
+                <option value="trial">Пробный · 3 кв · 10 диалогов · 0 ₸</option>
+                <option value="solo">Мини · 1–2 кв · 30 диалогов · 12 000 ₸</option>
                 <option value="start">Старт · 4 кв · 80 диалогов</option>
                 <option value="business">Бизнес · 15 кв · 200 диалогов</option>
                 <option value="pro">Про · 30 кв · 500 диалогов</option>
