@@ -224,14 +224,118 @@ export interface Subscription {
   org: { id: string; name: string; status: string };
   user: { email: string };
   plan: { id: string; name: string; priceKzt: number; forWhom: string; perks: string[] };
+  trial?: { endsAt: string | null; daysLeft: number | null; expired: boolean } | null;
   usage: {
     properties: { used: number; max: number };
-    dialogs: { used: number; included: number; extra: number; max: number };
+    dialogs: { used: number; included: number; extra: number; max: number; unlimited?: boolean };
   };
   idleDays: number;
   features: { id: string; label: string; on: boolean }[];
+  /** Menu gate: the «Интеграции» section shows only when ops turned this on. */
+  integrations: boolean;
   packs: { id: string; name: string; dialogs: number; priceKzt: number }[];
   overagePerDialogKzt: number;
+  notify: OwnerNotify;
+  /** Bot the owner must press Start on before Telegram reminders can work. */
+  botUsername: string;
+  requests: UpgradeRequest[];
+  /** Booking.com import status, when connected. */
+  booking?: BookingStatusPublic;
+}
+
+// --- Booking.com integration ---
+
+export interface BookingStatusPublic {
+  connected: boolean;
+  email?: string;
+  status?: 'active' | 'session_dead';
+  lastSyncAt?: string;
+}
+
+/** Step 1 — credentials. `needsCode` means Booking asked for a 2FA code. */
+export function bookingLogin(
+  token: string,
+  email: string,
+  password: string,
+): Promise<
+  | { ok: true; needsCode: true; ticket: string }
+  | { ok: true; connected: true; reservations: number; booking: BookingStatusPublic }
+> {
+  return req('/booking/login', token, {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+/** Step 2 — the 2FA code, on the ticket from step 1. */
+export function bookingVerify(
+  token: string,
+  ticket: string,
+  code: string,
+): Promise<{ ok: true; connected: true; reservations: number; booking: BookingStatusPublic }> {
+  return req('/booking/verify', token, {
+    method: 'POST',
+    body: JSON.stringify({ ticket, code }),
+  });
+}
+
+/** Pull the latest reservations into the calendar now. */
+export function bookingSync(
+  token: string,
+): Promise<{ ok: true; imported: number; removed: number; total: number }> {
+  invalidateAdminCache();
+  return req('/booking/sync', token, { method: 'POST' });
+}
+
+/** Disconnect Booking from this cabinet. */
+export function bookingUnbind(token: string): Promise<{ ok: true; booking: BookingStatusPublic }> {
+  invalidateAdminCache();
+  return req('/booking', token, { method: 'DELETE' });
+}
+
+/** Where the owner wants operational reminders delivered. */
+export interface OwnerNotify {
+  channel: 'whatsapp' | 'telegram' | 'off';
+  whatsappPhone?: string;
+  telegramUsername?: string;
+  telegramChatId?: string;
+  onPayLink?: boolean;
+  onLimits?: boolean;
+}
+
+export interface UpgradeRequest {
+  id: string;
+  kind: 'dialogs' | 'plan';
+  amount?: number;
+  plan?: string;
+  comment?: string;
+  status: 'new' | 'done' | 'rejected';
+  createdAt: string;
+}
+
+/** Ask ops to raise the limits — there is no self-serve payment yet. */
+export function requestUpgrade(
+  token: string,
+  body: { kind: 'dialogs' | 'plan'; amount?: number; plan?: string; comment?: string },
+): Promise<{ ok: boolean; request: UpgradeRequest }> {
+  return req('/upgrade-request', token, { method: 'POST', body: JSON.stringify(body) });
+}
+
+export function saveNotify(
+  token: string,
+  body: {
+    channel: 'whatsapp' | 'telegram' | 'off';
+    whatsappPhone?: string;
+    telegramUsername?: string;
+    onPayLink?: boolean;
+    onLimits?: boolean;
+  },
+): Promise<{ ok: boolean; notify: OwnerNotify }> {
+  return req('/notify', token, { method: 'PUT', body: JSON.stringify(body) });
+}
+
+export function testNotify(token: string): Promise<{ ok: boolean; via?: string }> {
+  return req('/notify/test', token, { method: 'POST' });
 }
 
 export function getSubscription(token: string): Promise<Subscription> {

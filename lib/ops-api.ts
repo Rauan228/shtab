@@ -72,7 +72,13 @@ export async function opsLogin(
 }
 
 /** Something on a client needs a human — ordered most urgent first. */
-export type AttentionKind = 'no_channel' | 'wa_down' | 'limit_hit' | 'limit_near' | 'quiet';
+export type AttentionKind =
+  | 'no_channel'
+  | 'wa_down'
+  | 'limit_hit'
+  | 'limit_near'
+  | 'quiet'
+  | 'trial_expired';
 
 export interface AttentionRow {
   orgId: string;
@@ -245,6 +251,20 @@ export function confirmOpsTelegram(
 
 export function unbindOpsTelegram(token: string, id: string): Promise<{ ok: boolean; telegram: PublicTelegram }> {
   return req(`/orgs/${id}/telegram`, token, { method: 'DELETE' });
+}
+
+// --- feature flags (the manual gate for hand-onboarded features) ---
+
+/**
+ * Flip a client's feature flags. Right now the one that matters is
+ * `integrations`, which reveals the Booking connect wizard in their cabinet.
+ */
+export function setOpsFeatures(
+  token: string,
+  id: string,
+  features: Partial<Record<'integrations' | 'kaspi_pay' | 'cloud_api' | 'instagram' | 'extra_seats', boolean>>,
+): Promise<{ ok: boolean; features: Record<string, boolean> }> {
+  return req(`/orgs/${id}/features`, token, { method: 'PATCH', body: JSON.stringify({ features }) });
 }
 
 // --- plan / dialog packs / status ---

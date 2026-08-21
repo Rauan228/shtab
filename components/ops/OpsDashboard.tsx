@@ -16,14 +16,8 @@ const TONE: Record<AttentionKind, { bg: string; fg: string; label: string }> = {
   limit_hit: { bg: 'oklch(0.96 0.03 25)', fg: 'oklch(0.48 0.16 25)', label: 'лимит' },
   limit_near: { bg: 'oklch(0.96 0.04 80)', fg: 'oklch(0.45 0.1 70)', label: 'лимит близко' },
   quiet: { bg: 'oklch(0.96 0.02 250)', fg: 'oklch(0.45 0.02 250)', label: 'тишина' },
+  trial_expired: { bg: 'oklch(0.96 0.04 80)', fg: 'oklch(0.45 0.1 70)', label: 'триал' },
 };
-
-/** Usage bar: amber from 80%, red once the cap is spent. */
-function usageColor(pct: number): string {
-  if (pct >= 100) return 'oklch(0.6 0.17 25)';
-  if (pct >= 80) return 'oklch(0.72 0.14 75)';
-  return 'var(--brand)';
-}
 
 export function OpsDashboard() {
   const { token } = useOpsAuth();
@@ -71,7 +65,7 @@ export function OpsDashboard() {
         </div>
         {data.attention.length === 0 ? (
           <div className="op-row" style={{ fontSize: 13, color: 'oklch(0.55 0.012 250)' }}>
-            Каналы на месте, лимиты не поджимают, все клиенты пишут.
+            Каналы на месте, все клиенты пишут.
           </div>
         ) : (
           data.attention.map((a, i) => {
@@ -120,7 +114,7 @@ export function OpsDashboard() {
         </div>
       </div>
 
-      {/* Per-client economics: who is close to the cap, and who costs more than they pay. */}
+      {/* Per-client economics: volume vs what they pay. */}
       <div className="card" style={{ overflow: 'auto' }}>
         <div className="card-h">Клиенты · нагрузка и юнит-экономика</div>
         <table className="ops-table">
@@ -148,18 +142,8 @@ export function OpsDashboard() {
                   )}
                 </td>
                 <td>{c.planName}</td>
-                <td style={{ minWidth: 132 }}>
-                  <div className="mono" style={{ fontSize: 12 }}>
-                    {c.dialogs.used}/{c.dialogs.max}
-                  </div>
-                  <div className="bar" style={{ marginTop: 4 }}>
-                    <i
-                      style={{
-                        width: `${Math.min(100, c.dialogs.pct)}%`,
-                        background: usageColor(c.dialogs.pct),
-                      }}
-                    />
-                  </div>
+                <td className="mono" style={{ fontSize: 12 }}>
+                  {c.dialogs.used}
                 </td>
                 <td className="mono">{c.today || '—'}</td>
                 <td style={{ fontSize: 11 }}>
