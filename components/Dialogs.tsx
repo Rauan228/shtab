@@ -20,7 +20,7 @@ const POLL_MS = 20000;
 const FILTERS: { id: DialogFilter; label: string }[] = [
   { id: 'all', label: 'Все' },
   { id: 'live', label: 'Живые' },
-  { id: 'awaiting_pay', label: 'Ждут оплату' },
+  { id: 'awaiting_pay', label: 'Ждут подтверждения' },
   { id: 'today', label: 'Сегодня' },
 ];
 

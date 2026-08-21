@@ -26,10 +26,11 @@ const MONTHS = [
 ];
 
 const PLAN_CHOICES = [
-  { id: 'start', label: 'Старт · 4 квартиры' },
-  { id: 'business', label: 'Бизнес · 15 квартир' },
-  { id: 'pro', label: 'Про · 30 квартир' },
-];
+  { id: 'solo', name: 'Мини', apts: 2, price: 12_000 },
+  { id: 'start', name: 'Старт', apts: 4, price: 35_000 },
+  { id: 'business', name: 'Бизнес', apts: 15, price: 55_000 },
+  { id: 'pro', name: 'Про', apts: 30, price: 89_000 },
+] as const;
 
 function periodTitle(label: string): string {
   const [y, m] = label.split('-');
@@ -63,6 +64,13 @@ const STATUS_TEXT: Record<UpgradeRequest['status'], string> = {
   rejected: 'отклонена',
 };
 
+function defaultWantPlan(used: number, max: number): string {
+  if (max > 0) {
+    return PLAN_CHOICES.find((p) => p.apts > max)?.id ?? 'pro';
+  }
+  return PLAN_CHOICES.find((p) => p.apts >= Math.max(1, used))?.id ?? 'start';
+}
+
 export function Plan() {
   const { token } = useAuth();
   const [data, setData] = useState<Subscription | null>(null);
@@ -77,7 +85,14 @@ export function Plan() {
   const load = () => {
     if (!token) return;
     getSubscription(token)
-      .then(setData)
+      .then((s) => {
+        setData(s);
+        setWantPlan((cur) => {
+          const next = defaultWantPlan(s.usage.properties.used, s.usage.properties.max);
+          if (PLAN_CHOICES.some((p) => p.id === cur && p.id !== s.plan.id)) return cur;
+          return next;
+        });
+      })
       .catch((e) => setErr(e instanceof Error ? e.message : 'Не удалось загрузить тариф'));
   };
 
@@ -97,11 +112,11 @@ export function Plan() {
   if (!data) return <div className="skel" style={{ height: 180 }} />;
 
   const p = data.usage.properties;
-  const dialogsUsed = data.usage.dialogs.used;
   const unlimitedApts = p.max <= 0;
-  const propsLeft = unlimitedApts ? 999 : Math.max(0, p.max - p.used);
+  const propsLeft = unlimitedApts ? 0 : Math.max(0, p.max - p.used);
   const trial = data.trial;
   const openRequest = data.requests.find((r) => r.status === 'new');
+  const onTopPlan = data.plan.id === 'pro';
 
   const send = async () => {
     if (!token) return;
@@ -114,7 +129,7 @@ export function Plan() {
         plan: wantPlan,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       });
-      setSent('Заявка отправлена. Свяжемся с вами и сменим тариф.');
+      setSent('Заявка отправлена. Свяжемся и сменим тариф.');
       setComment('');
       load();
     } catch (e) {
@@ -128,7 +143,7 @@ export function Plan() {
     <div className="set">
       <div className="card card-pad plan-hero">
         <div>
-          <div className="kicker">Подписка · {periodTitle(data.period.label)}</div>
+          <div className="kicker">Тариф · {periodTitle(data.period.label)}</div>
           <div style={{ fontSize: 22, fontWeight: 600, marginTop: 6 }}>{data.plan.name}</div>
           <div style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 4 }}>{data.plan.forWhom}</div>
         </div>
@@ -156,41 +171,27 @@ export function Plan() {
           <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
             {trial.expired
               ? 'Агент больше не отвечает гостям. Выберите тариф ниже — подключим в течение дня.'
-              : `Осталось ${trial.daysLeft ?? '—'} дн. Потом агент остановится, пока не выберете тариф. Квартиры на тесте без лимита.`}
+              : `Осталось ${trial.daysLeft ?? '—'} дн. Потом агент остановится, пока не выберете тариф.`}
           </div>
         </div>
       )}
 
-      <div className="g2">
-        <div className="card card-pad">
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
-          <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
-            {unlimitedApts
-              ? 'На пробном тарифе число квартир не ограничено.'
-              : propsLeft > 0
-                ? `Свободно ${propsLeft} мест. Скрытые квартиры не считаются.`
-                : 'Все места заняты — скройте лишнюю квартиру или поднимите тариф.'}
-          </div>
-          {unlimitedApts ? (
-            <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
-              {p.used}
-            </div>
-          ) : (
-            <Meter used={p.used} max={p.max} />
-          )}
+      <div className="card card-pad">
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Квартиры</div>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
+          {unlimitedApts
+            ? `Сейчас в продаже ${p.used}. На пробном тарифе лимита нет.`
+            : propsLeft > 0
+              ? `Свободно ${propsLeft} мест. Скрытые квартиры не считаются.`
+              : 'Все места заняты — скройте лишнюю или улучшите тариф.'}
         </div>
-        <div className="card card-pad">
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Диалоги</div>
-          <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
-            Без лимита. Цена тарифа зависит только от числа квартир.
-          </div>
+        {unlimitedApts ? (
           <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
-            {dialogsUsed}
+            {p.used}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 8 }}>
-            гостей в этом месяце · новый диалог, если гость молчал {data.idleDays} дн.
-          </div>
-        </div>
+        ) : (
+          <Meter used={p.used} max={p.max} />
+        )}
       </div>
 
       <NotifySettings
@@ -201,10 +202,11 @@ export function Plan() {
       />
 
       <div className="card card-pad">
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Нужно больше квартир</div>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Улучшить тариф</div>
         <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-          Оставьте заявку на тариф выше — подключим дополнительные объекты. Диалоги по-прежнему
-          без лимита.
+          {onTopPlan
+            ? 'Это старший тариф. Если квартир больше 30 — напишите сколько, подберём.'
+            : 'Больше квартир — другой тариф. Выберите план, подключим в течение дня.'}
         </div>
 
         {openRequest ? (
@@ -214,7 +216,7 @@ export function Plan() {
           >
             <div style={{ fontSize: 13, fontWeight: 500 }}>
               Заявка отправлена
-              {openRequest.plan ? ` · тариф ${openRequest.plan}` : ''}
+              {openRequest.plan ? ` · ${PLAN_CHOICES.find((x) => x.id === openRequest.plan)?.name ?? openRequest.plan}` : ''}
             </div>
             <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 4 }}>
               Статус: {STATUS_TEXT[openRequest.status]} · от{' '}
@@ -223,23 +225,33 @@ export function Plan() {
           </div>
         ) : (
           <>
-            <div className="nights-row" style={{ marginTop: 12 }}>
-              {PLAN_CHOICES.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  className={wantPlan === n.id ? 'on' : ''}
-                  onClick={() => setWantPlan(n.id)}
-                >
-                  {n.label}
-                </button>
-              ))}
+            <div className="plan-pick">
+              {PLAN_CHOICES.map((n) => {
+                const current = n.id === data.plan.id;
+                const on = wantPlan === n.id && !current;
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    className={`plan-pick-i${on ? ' on' : ''}${current ? ' now' : ''}`}
+                    disabled={current}
+                    onClick={() => setWantPlan(n.id)}
+                  >
+                    <span className="plan-pick-top">
+                      <b>{n.name}</b>
+                      {current ? <span className="plan-pick-tag">сейчас</span> : null}
+                    </span>
+                    <span className="plan-pick-apts">до {n.apts} кв.</span>
+                    <span className="mono plan-pick-price">{money(n.price)}</span>
+                  </button>
+                );
+              })}
             </div>
             <label className="field" style={{ marginTop: 12 }}>
               <span>Комментарий (необяз.)</span>
               <input
                 className="inp"
-                placeholder="Нужно 8 квартир"
+                placeholder={onTopPlan ? 'Нужно 40 квартир' : 'Нужно с 1 сентября'}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
@@ -247,7 +259,7 @@ export function Plan() {
             <button
               className="btn btn-primary"
               style={{ marginTop: 12 }}
-              disabled={busy}
+              disabled={busy || (!onTopPlan && wantPlan === data.plan.id)}
               onClick={() => void send()}
             >
               {busy ? '…' : 'Отправить заявку'}
@@ -271,8 +283,10 @@ export function Plan() {
                 .filter((r) => r.status !== 'new')
                 .map((r) => (
                   <li key={r.id}>
-                    {r.plan ? `тариф ${r.plan}` : r.amount ? `+${r.amount} диалогов` : 'заявка'} ·{' '}
-                    {STATUS_TEXT[r.status]} · {new Date(r.createdAt).toLocaleDateString('ru-RU')}
+                    {r.plan
+                      ? `тариф ${PLAN_CHOICES.find((x) => x.id === r.plan)?.name ?? r.plan}`
+                      : 'заявка'}{' '}
+                    · {STATUS_TEXT[r.status]} · {new Date(r.createdAt).toLocaleDateString('ru-RU')}
                   </li>
                 ))}
             </ul>

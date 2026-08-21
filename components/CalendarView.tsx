@@ -21,7 +21,6 @@ import { ST, type CalStatus } from '../lib/status';
 import { useUi } from '../lib/ui';
 import { BuildingIcon, CheckIcon, ChevronDown, ChevronLeft, ChevronRight } from './icons';
 
-const CW = 38;
 const DAY_COUNT = 30;
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 
@@ -363,7 +362,7 @@ export function CalendarView() {
                   </div>
                 ))}
               </div>
-              <div className="cal-days" style={{ width: days.length * CW }}>
+              <div className="cal-days">
                 <div className="cal-days-h">
                   {days.map((d) => (
                     <div key={d.iso} className={`cal-dh${d.today ? ' today' : ''}${d.weekend ? ' we' : ''}`}>
@@ -373,7 +372,7 @@ export function CalendarView() {
                   ))}
                 </div>
                 {properties.map((p) => (
-                  <div key={p.id} className="cal-track" style={{ width: days.length * CW }}>
+                  <div key={p.id} className="cal-track">
                     <div className="cal-cells">
                       {days.map((d, i) => {
                         const inRange = !!(
@@ -420,8 +419,8 @@ export function CalendarView() {
                               })
                             }
                             style={{
-                              left: left * CW + 3,
-                              width: Math.max(width * CW - 6, 20),
+                              left: `calc(${(left / DAY_COUNT) * 100}% + 3px)`,
+                              width: `max(20px, calc(${(width / DAY_COUNT) * 100}% - 6px))`,
                               background: c.bg,
                               border: `1px solid ${c.bd}`,
                               borderLeft: `3px solid ${c.bd}`,
@@ -443,7 +442,10 @@ export function CalendarView() {
                   </div>
                 ))}
                 {days.findIndex((d) => d.today) >= 0 && (
-                  <div className="today-line" style={{ left: days.findIndex((d) => d.today) * CW + CW / 2 }} />
+                  <div
+                    className="today-line"
+                    style={{ left: `${((days.findIndex((d) => d.today) + 0.5) / DAY_COUNT) * 100}%` }}
+                  />
                 )}
               </div>
             </div>

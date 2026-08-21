@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   addDays,
   addMonths,
@@ -20,6 +20,7 @@ import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
 import { downloadReportExcel } from '../lib/report-excel';
 import { DateField } from './DateField';
+import { HelpIcon } from './icons';
 
 function prettyReportCell(s: string): string {
   return String(s ?? '').replace(/\d{4}-\d{2}-\d{2}/g, (iso) => {
@@ -28,9 +29,26 @@ function prettyReportCell(s: string): string {
   });
 }
 
+function HelpTip({ text, side = 'right' }: { text: string; side?: 'right' | 'down' }) {
+  return (
+    <span
+      className={`help-q${side === 'down' ? ' down' : ''}`}
+      tabIndex={0}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      aria-label="Что это за отчёт"
+    >
+      <HelpIcon size={14} />
+      <span className="help-pop" role="tooltip">
+        {text}
+      </span>
+    </span>
+  );
+}
+
 export function Reports() {
   const { token } = useAuth();
-  const { flash, readOnly } = useUi();
+  const { readOnly } = useUi();
   const today = todayIso();
   const [type, setType] = useState<ReportTypeId>('kpi');
   const [from, setFrom] = useState(() => startOfMonth(today));
@@ -39,9 +57,27 @@ export function Reports() {
   const [runs, setRuns] = useState<ReportRunMeta[]>([]);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const runsRef = useRef(runs);
+  runsRef.current = runs;
 
   const maxBar = Math.max(1, ...(data?.series.map((s) => s.a) ?? [1]));
+  const meta = REPORT_TYPES.find((t) => t.id === type) ?? REPORT_TYPES[0]!;
+  const history = runs.filter((r) => r.type === type);
+
+  const remember = (t: ReportTypeId, f: string, o: string) => {
+    if (!token || readOnly) return;
+    if (runsRef.current.some((x) => x.type === t && x.from === f && x.to === o)) return;
+    saveReportRun(token, t, f, o)
+      .then((r) => {
+        setRuns((list) => [
+          r.run,
+          ...list.filter(
+            (x) => x.id !== r.run.id && !(x.type === r.run.type && x.from === r.run.from && x.to === r.run.to),
+          ),
+        ]);
+      })
+      .catch(() => {});
+  };
 
   const load = (next?: { type?: ReportTypeId; from?: string; to?: string }) => {
     if (!token) return;
@@ -57,22 +93,23 @@ export function Reports() {
       .then((r) => {
         setData(r.report);
         setErr('');
+        remember(t, f, o);
       })
       .catch((e) => setErr(e instanceof Error ? e.message : 'Не удалось посчитать'))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    load();
-    // first paint only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
-
-  useEffect(() => {
     if (!token) return;
     listReportRuns(token)
-      .then((r) => setRuns(r.runs))
-      .catch(() => {});
+      .then((r) => {
+        setRuns(r.runs);
+        runsRef.current = r.runs;
+        load();
+      })
+      .catch(() => load());
+    // first paint only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const preset = (kind: 'this' | 'last' | '30' | 'year') => {
@@ -112,8 +149,10 @@ export function Reports() {
             className={`rep-nav-i${type === t.id ? ' on' : ''}`}
             onClick={() => pickType(t.id)}
           >
-            <b>{t.title}</b>
-            <span>{t.hint}</span>
+            <span className="rep-nav-row">
+              <b>{t.title}</b>
+              <HelpTip text={t.help} />
+            </span>
           </button>
         ))}
       </aside>
@@ -157,34 +196,16 @@ export function Reports() {
             >
               Скачать Excel
             </button>
-            {!readOnly && (
-              <button
-                type="button"
-                className="btn"
-                disabled={!data || saving}
-                onClick={() => {
-                  if (!token) return;
-                  setSaving(true);
-                  saveReportRun(token, type, from, to)
-                    .then((r) => {
-                      setData(r.report);
-                      setRuns((list) => [r.run, ...list.filter((x) => x.id !== r.run.id)]);
-                      flash('Сохранено в историю — можно скачать позже');
-                    })
-                    .catch((e) => setErr(e instanceof Error ? e.message : 'Не сохранилось'))
-                    .finally(() => setSaving(false));
-                }}
-              >
-                В историю
-              </button>
-            )}
           </div>
         </div>
 
         {data && (
           <>
             <div className="dash-hello" style={{ marginTop: 4 }}>
-              <h1>{data.title}</h1>
+              <h1>
+                {data.title}
+                <HelpTip text={meta.help} side="down" />
+              </h1>
               <p>
                 {formatDateRu(data.from)} — {formatDateRu(addDays(data.to, -1))}
                 {data.note ? ` · ${data.note}` : ''}
@@ -241,13 +262,13 @@ export function Reports() {
         )}
 
         <div className="card" style={{ overflow: 'hidden' }}>
-          <div className="card-h">История выгрузок</div>
-          {runs.length === 0 ? (
+          <div className="card-h">История · {meta.title}</div>
+          {history.length === 0 ? (
             <div className="op-row" style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
-              Пока пусто. Посчитайте отчёт и нажмите «В историю» — через месяц он останется здесь.
+              Пока пусто. Откройте этот отчёт — он останется здесь, чтобы скачать позже.
             </div>
           ) : (
-            runs.map((r) => (
+            history.map((r) => (
               <div key={r.id} className="op-row">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="trunc" style={{ fontSize: 13, fontWeight: 500 }}>
