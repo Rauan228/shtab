@@ -256,3 +256,10 @@ export const HelpIcon = ({ size = 16, className }: Props) => (
     <path d="M12 17h.01" />
   </svg>
 );
+
+export const MicIcon = ({ size = 16, className }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" />
+  </svg>
+);

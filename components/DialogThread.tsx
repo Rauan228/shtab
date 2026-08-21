@@ -17,7 +17,18 @@ import {
 import { useAuth } from '../lib/auth';
 import { useUi } from '../lib/ui';
 import { dialogTitle } from './Dialogs';
-import { AlertIcon } from './icons';
+import { AlertIcon, MicIcon } from './icons';
+
+/** Whisper hallucination — never show this as if the guest said it. */
+function isSttJunk(text: string): boolean {
+  return /dimatorzok|субтитры\s+сделал|subtitles?\s+(made|by)|thanks for watching|subscribe to|подпишись/i.test(
+    text,
+  );
+}
+
+function isVoiceMarker(text: string): boolean {
+  return /^\[гость прислал голосовое/i.test(text);
+}
 
 const POLL_MS = 20000;
 
@@ -275,9 +286,18 @@ export function DialogThread({
               const newDay = day && day !== lastDay;
               if (newDay) lastDay = day;
 
-              const photos = m.media?.items.map((i) => dialogMediaSrc(i.url, token ?? '')) ?? [];
+              const isVoice = m.media?.kind === 'voice';
+              const photos = isVoice
+                ? []
+                : (m.media?.items.map((i) => dialogMediaSrc(i.url, token ?? '')) ?? []);
               const caption = m.media?.items.find((i) => i.caption)?.caption;
+              const voiceSrc =
+                isVoice && m.media?.items[0]?.url
+                  ? dialogMediaSrc(m.media.items[0].url, token ?? '')
+                  : '';
               const isGuest = m.role === 'guest';
+              const voiceJunk = isSttJunk(m.text ?? '') || isVoiceMarker(m.text ?? '');
+              const showVoice = isVoice || (isGuest && voiceJunk);
 
               return (
                 <Fragment key={m.id}>
@@ -313,6 +333,17 @@ export function DialogThread({
                         m.role === 'owner' ? ' bbl-owner' : ''
                       }`}
                     >
+                      {showVoice ? (
+                        <div className="bbl-voice">
+                          <div className="bbl-voice-h">
+                            <MicIcon size={14} />
+                            Голосовое
+                          </div>
+                          {voiceSrc ? <audio controls preload="metadata" src={voiceSrc} /> : null}
+                          {voiceJunk ? <div className="bbl-voice-miss">не распознано</div> : null}
+                        </div>
+                      ) : null}
+
                       {photos.length > 0 ? (
                         <>
                           {caption ? <div className="bbl-cap">{caption}</div> : null}
@@ -354,7 +385,7 @@ export function DialogThread({
                         const { quote, body: rawBody } = splitReply(m.text, m.quotedText);
                         const t = rawBody.trim();
                         const quoteEl = quote ? <div className="bbl-quote">{quote}</div> : null;
-                        if (!t) return quoteEl;
+                        if (!t || isSttJunk(t) || isVoiceMarker(t)) return quoteEl;
                         // Don't repeat the caption above its own photos, and
                         // don't print the raw URL above the payment card that
                         // already shows it.

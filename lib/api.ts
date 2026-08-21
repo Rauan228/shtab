@@ -630,7 +630,7 @@ export interface DialogMessage {
   /** Guest replied to this prior bubble. */
   quotedText?: string;
   media?: {
-    kind: 'photo' | 'album';
+    kind: 'photo' | 'album' | 'voice';
     items: DialogMediaItem[];
     propertyId?: string;
   };
