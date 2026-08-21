@@ -224,9 +224,10 @@ export interface Subscription {
   org: { id: string; name: string; status: string };
   user: { email: string };
   plan: { id: string; name: string; priceKzt: number; forWhom: string; perks: string[] };
+  trial?: { endsAt: string | null; daysLeft: number | null; expired: boolean } | null;
   usage: {
     properties: { used: number; max: number };
-    dialogs: { used: number; included: number; extra: number; max: number };
+    dialogs: { used: number; included: number; extra: number; max: number; unlimited?: boolean };
   };
   idleDays: number;
   features: { id: string; label: string; on: boolean }[];

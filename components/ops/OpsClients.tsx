@@ -72,11 +72,11 @@ export function OpsClients() {
             <label className="field">
               <span>Тариф</span>
               <select className="inp" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })}>
-                <option value="trial">Пробный · 3 кв · 10 диалогов · 0 ₸</option>
-                <option value="solo">Мини · 1–2 кв · 30 диалогов · 12 000 ₸</option>
-                <option value="start">Старт · 4 кв · 80 диалогов</option>
-                <option value="business">Бизнес · 15 кв · 200 диалогов</option>
-                <option value="pro">Про · 30 кв · 500 диалогов</option>
+                <option value="trial">Пробный · 7 дней · 0 ₸</option>
+                <option value="solo">Мини · 2 кв · 12 000 ₸</option>
+                <option value="start">Старт · 4 кв · 35 000 ₸</option>
+                <option value="business">Бизнес · 15 кв · 55 000 ₸</option>
+                <option value="pro">Про · 30 кв · 89 000 ₸</option>
               </select>
             </label>
           </div>
@@ -138,11 +138,11 @@ export function OpsClients() {
                   {r.planName} · {r.priceKzt.toLocaleString('ru-RU')} ₸
                 </td>
                 <td className="mono">
-                  {r.properties.used}/{r.properties.max}
+                  {r.properties.max > 0
+                    ? `${r.properties.used}/${r.properties.max}`
+                    : `${r.properties.used}`}
                 </td>
-                <td className="mono">
-                  {r.dialogs.used}/{r.dialogs.max}
-                </td>
+                <td className="mono">{r.dialogs.used}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   {r.whatsapp?.connected && (
                     <span

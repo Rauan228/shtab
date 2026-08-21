@@ -140,17 +140,20 @@ export function OpsClientDetail({ id }: { id: string }) {
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
           <div className="mono" style={{ marginTop: 8, fontSize: 18 }}>
-            {data.usage.properties.used} / {data.usage.properties.max}
+            {data.usage.properties.max > 0
+              ? `${data.usage.properties.used} / ${data.usage.properties.max}`
+              : String(data.usage.properties.used)}
           </div>
+          {data.usage.properties.max <= 0 && (
+            <div style={{ fontSize: 11, marginTop: 6, color: 'oklch(0.5 0.01 250)' }}>без лимита на тесте</div>
+          )}
         </div>
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Диалоги в этом месяце</div>
           <div className="mono" style={{ marginTop: 8, fontSize: 18 }}>
-            {data.usage.dialogs.used} / {data.usage.dialogs.max}
+            {data.usage.dialogs.used}
           </div>
-          {o.limits.extraDialogs > 0 && (
-            <div style={{ fontSize: 11, marginTop: 6 }}>в т.ч. докуплено {o.limits.extraDialogs}</div>
-          )}
+          <div style={{ fontSize: 11, marginTop: 6, color: 'oklch(0.5 0.01 250)' }}>без лимита</div>
         </div>
       </div>
 
@@ -266,7 +269,6 @@ export function OpsClientDetail({ id }: { id: string }) {
         token={token ?? ''}
         plan={o.plan}
         status={o.status}
-        extraDialogs={o.limits.extraDialogs}
         onChanged={load}
       />
 

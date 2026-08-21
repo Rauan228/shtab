@@ -25,6 +25,12 @@ const MONTHS = [
   'декабрь',
 ];
 
+const PLAN_CHOICES = [
+  { id: 'start', label: 'Старт · 4 квартиры' },
+  { id: 'business', label: 'Бизнес · 15 квартир' },
+  { id: 'pro', label: 'Про · 30 квартир' },
+];
+
 function periodTitle(label: string): string {
   const [y, m] = label.split('-');
   const mi = Number(m) - 1;
@@ -34,19 +40,6 @@ function periodTitle(label: string): string {
 
 function money(n: number): string {
   return `${n.toLocaleString('ru-RU')} ₸`;
-}
-
-/** Days left in the current month, in the business timezone. */
-function daysLeftInMonth(): number {
-  const now = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Almaty',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-  const [y, m, d] = now.split('-').map(Number);
-  if (!y || !m || !d) return 0;
-  return new Date(Date.UTC(y, m, 0)).getUTCDate() - d;
 }
 
 function Meter({ used, max, warnAt = 0.8 }: { used: number; max: number; warnAt?: number }) {
@@ -75,8 +68,7 @@ export function Plan() {
   const [data, setData] = useState<Subscription | null>(null);
   const [err, setErr] = useState('');
 
-  // Upgrade request form
-  const [want, setWant] = useState(100);
+  const [wantPlan, setWantPlan] = useState('business');
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState('');
@@ -104,11 +96,11 @@ export function Plan() {
   }
   if (!data) return <div className="skel" style={{ height: 180 }} />;
 
-  const d = data.usage.dialogs;
   const p = data.usage.properties;
-  const dialogLeft = Math.max(0, d.max - d.used);
-  const propsLeft = Math.max(0, p.max - p.used);
-  const daysLeft = daysLeftInMonth();
+  const dialogsUsed = data.usage.dialogs.used;
+  const unlimitedApts = p.max <= 0;
+  const propsLeft = unlimitedApts ? 999 : Math.max(0, p.max - p.used);
+  const trial = data.trial;
   const openRequest = data.requests.find((r) => r.status === 'new');
 
   const send = async () => {
@@ -118,11 +110,11 @@ export function Plan() {
     setSent('');
     try {
       await requestUpgrade(token, {
-        kind: 'dialogs',
-        amount: want,
+        kind: 'plan',
+        plan: wantPlan,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       });
-      setSent('Заявка отправлена. Свяжемся с вами и поднимем лимит.');
+      setSent('Заявка отправлена. Свяжемся с вами и сменим тариф.');
       setComment('');
       load();
     } catch (e) {
@@ -151,31 +143,56 @@ export function Plan() {
         </div>
       </div>
 
+      {trial && (
+        <div
+          className="card card-pad"
+          style={{
+            borderColor: trial.expired ? 'oklch(0.7 0.12 25)' : 'var(--brand)',
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600 }}>
+            {trial.expired ? 'Пробная неделя закончилась' : 'Пробный период'}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
+            {trial.expired
+              ? 'Агент больше не отвечает гостям. Выберите тариф ниже — подключим в течение дня.'
+              : `Осталось ${trial.daysLeft ?? '—'} дн. Потом агент остановится, пока не выберете тариф. Квартиры на тесте без лимита.`}
+          </div>
+        </div>
+      )}
+
       <div className="g2">
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Объекты</div>
           <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
-            {propsLeft > 0
-              ? `Свободно ${propsLeft} мест. Скрытые квартиры не считаются.`
-              : 'Все места заняты — скройте лишнюю квартиру или поднимите тариф.'}
+            {unlimitedApts
+              ? 'На пробном тарифе число квартир не ограничено.'
+              : propsLeft > 0
+                ? `Свободно ${propsLeft} мест. Скрытые квартиры не считаются.`
+                : 'Все места заняты — скройте лишнюю квартиру или поднимите тариф.'}
           </div>
-          <Meter used={p.used} max={p.max} />
+          {unlimitedApts ? (
+            <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
+              {p.used}
+            </div>
+          ) : (
+            <Meter used={p.used} max={p.max} />
+          )}
         </div>
         <div className="card card-pad">
           <div style={{ fontSize: 13, fontWeight: 600 }}>Диалоги</div>
           <div style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '6px 0 10px' }}>
-            Осталось {dialogLeft}. Новый диалог считается, если гость молчал {data.idleDays} дней.
+            Без лимита. Цена тарифа зависит только от числа квартир.
           </div>
-          <Meter used={d.used} max={d.max} />
+          <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>
+            {dialogsUsed}
+          </div>
           <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 8 }}>
-            В тарифе {d.included}
-            {d.extra > 0 ? ` + добавлено ${d.extra}` : ''} · до конца месяца{' '}
-            {daysLeft === 0 ? 'меньше дня' : `${daysLeft} дн.`}
+            гостей в этом месяце · новый диалог, если гость молчал {data.idleDays} дн.
           </div>
         </div>
       </div>
 
-      {/* Where reminders go: limits, and every payment detail sent to a guest. */}
       <NotifySettings
         token={token ?? ''}
         notify={data.notify}
@@ -183,12 +200,11 @@ export function Plan() {
         onChanged={load}
       />
 
-      {/* No payment gateway yet, so raising a limit is a request, not a purchase. */}
       <div className="card card-pad">
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Нужно больше диалогов</div>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Нужно больше квартир</div>
         <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-          Оставьте заявку — мы свяжемся, примем оплату переводом и поднимем лимит в этом же
-          кабинете. Обычно в течение дня.
+          Оставьте заявку на тариф выше — подключим дополнительные объекты. Диалоги по-прежнему
+          без лимита.
         </div>
 
         {openRequest ? (
@@ -198,7 +214,7 @@ export function Plan() {
           >
             <div style={{ fontSize: 13, fontWeight: 500 }}>
               Заявка отправлена
-              {openRequest.amount ? ` · +${openRequest.amount} диалогов` : ''}
+              {openRequest.plan ? ` · тариф ${openRequest.plan}` : ''}
             </div>
             <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 4 }}>
               Статус: {STATUS_TEXT[openRequest.status]} · от{' '}
@@ -208,14 +224,14 @@ export function Plan() {
         ) : (
           <>
             <div className="nights-row" style={{ marginTop: 12 }}>
-              {[50, 100, 300].map((n) => (
+              {PLAN_CHOICES.map((n) => (
                 <button
-                  key={n}
+                  key={n.id}
                   type="button"
-                  className={want === n ? 'on' : ''}
-                  onClick={() => setWant(n)}
+                  className={wantPlan === n.id ? 'on' : ''}
+                  onClick={() => setWantPlan(n.id)}
                 >
-                  +{n}
+                  {n.label}
                 </button>
               ))}
             </div>
@@ -223,7 +239,7 @@ export function Plan() {
               <span>Комментарий (необяз.)</span>
               <input
                 className="inp"
-                placeholder="Ожидаем поток на выходных"
+                placeholder="Нужно 8 квартир"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
@@ -234,7 +250,7 @@ export function Plan() {
               disabled={busy}
               onClick={() => void send()}
             >
-              {busy ? '…' : `Отправить заявку на +${want} диалогов`}
+              {busy ? '…' : 'Отправить заявку'}
             </button>
           </>
         )}
@@ -255,7 +271,7 @@ export function Plan() {
                 .filter((r) => r.status !== 'new')
                 .map((r) => (
                   <li key={r.id}>
-                    {r.amount ? `+${r.amount} диалогов` : `тариф ${r.plan ?? ''}`} ·{' '}
+                    {r.plan ? `тариф ${r.plan}` : r.amount ? `+${r.amount} диалогов` : 'заявка'} ·{' '}
                     {STATUS_TEXT[r.status]} · {new Date(r.createdAt).toLocaleDateString('ru-RU')}
                   </li>
                 ))}

@@ -3,40 +3,26 @@
 import { useState } from 'react';
 import { patchOpsOrg } from '../../lib/ops-api';
 
-/** Packs we sell on top of a plan, mirroring DIALOG_PACKS on the server. */
-const PACKS = [
-  { n: 50, price: '8 000 ₸' },
-  { n: 100, price: '15 000 ₸' },
-  { n: 300, price: '39 000 ₸' },
-];
-
 const PLANS = [
-  { id: 'trial', label: 'Пробный · 3 кв · 10 диалогов · 0 ₸' },
-  { id: 'solo', label: 'Мини · 1–2 кв · 30 диалогов · 12 000 ₸' },
-  { id: 'start', label: 'Старт · 4 кв · 80 диалогов' },
-  { id: 'business', label: 'Бизнес · 15 кв · 200 диалогов' },
-  { id: 'pro', label: 'Про · 30 кв · 500 диалогов' },
+  { id: 'trial', label: 'Пробный · 7 дней · 0 ₸' },
+  { id: 'solo', label: 'Мини · 2 кв · 12 000 ₸' },
+  { id: 'start', label: 'Старт · 4 кв · 35 000 ₸' },
+  { id: 'business', label: 'Бизнес · 15 кв · 55 000 ₸' },
+  { id: 'pro', label: 'Про · 30 кв · 89 000 ₸' },
 ];
 
-/**
- * Plan, purchased dialogs and account status.
- *
- * Extra dialogs are additive and survive a plan change — the client paid for
- * them separately, so a tariff move must not silently burn them.
- */
+/** Plan (apartment cap) and account status. Dialogs are not metered. */
 export function PlanControls({
   orgId,
   token,
   plan,
   status,
-  extraDialogs,
   onChanged,
 }: {
   orgId: string;
   token: string;
   plan: string;
   status: string;
-  extraDialogs: number;
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -63,7 +49,7 @@ export function PlanControls({
 
   return (
     <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 13, fontWeight: 600 }}>Тариф и лимиты</div>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>Тариф (по квартирам)</div>
 
       <label className="field">
         <span>Тариф</span>
@@ -80,33 +66,6 @@ export function PlanControls({
           ))}
         </select>
       </label>
-
-      <div>
-        <div className="lbl" style={{ marginBottom: 6 }}>
-          Докупить диалоги · сейчас сверх тарифа {extraDialogs}
-        </div>
-        <div className="nights-row">
-          {PACKS.map((p) => (
-            <button
-              key={p.n}
-              type="button"
-              disabled={busy}
-              onClick={() => void apply({ addDialogs: p.n }, `Добавлено ${p.n} диалогов`)}
-            >
-              +{p.n} · {p.price}
-            </button>
-          ))}
-          {extraDialogs > 0 && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void apply({ addDialogs: -extraDialogs }, 'Докупленные диалоги обнулены')}
-            >
-              обнулить
-            </button>
-          )}
-        </div>
-      </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button

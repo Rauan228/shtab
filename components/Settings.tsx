@@ -66,7 +66,7 @@ export function Settings() {
         </span>
         <span>
           <div className="more-t">Тариф и лимиты</div>
-          <div className="more-s">Сколько квартир и диалогов осталось в подписке</div>
+          <div className="more-s">Тариф и сколько квартир в подписке</div>
         </span>
         <span className="more-go">
           <ChevronRight />

@@ -71,7 +71,7 @@ export function NotifySettings({
     <div className="card card-pad">
       <div style={{ fontSize: 13, fontWeight: 600 }}>Уведомления хозяину</div>
       <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-        Куда писать, когда агент отправил гостю реквизиты и когда заканчиваются диалоги.
+        Куда писать, когда агент отправил гостю реквизиты и когда заканчивается оплаченный месяц.
       </div>
 
       <div className="nights-row" style={{ marginTop: 12 }}>
@@ -127,7 +127,7 @@ export function NotifySettings({
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
             <input type="checkbox" checked={onLimits} onChange={(e) => setOnLimits(e.target.checked)} />
-            Когда заканчиваются диалоги или оплаченный период
+            Когда заканчивается оплаченный период
           </label>
         </div>
       )}

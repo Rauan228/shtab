@@ -72,7 +72,13 @@ export async function opsLogin(
 }
 
 /** Something on a client needs a human — ordered most urgent first. */
-export type AttentionKind = 'no_channel' | 'wa_down' | 'limit_hit' | 'limit_near' | 'quiet';
+export type AttentionKind =
+  | 'no_channel'
+  | 'wa_down'
+  | 'limit_hit'
+  | 'limit_near'
+  | 'quiet'
+  | 'trial_expired';
 
 export interface AttentionRow {
   orgId: string;
